@@ -15,6 +15,8 @@ export interface VerbEnemy {
   alive: boolean;
   /** 밟힌 뒤 다시 생기기까지 남은 시간(ms). */
   respawnInMs: number;
+  /** 다시 생긴 직후 닿아도 아무 일이 없는 남은 시간(ms). */
+  graceMs: number;
 }
 
 export interface EnemySpawn {
@@ -37,6 +39,7 @@ export function createEnemy(s: EnemySpawn): VerbEnemy {
     dir: -1,
     alive: true,
     respawnInMs: 0,
+    graceMs: 0,
   };
 }
 
@@ -46,6 +49,7 @@ export function resetEnemy(e: VerbEnemy): void {
   e.dir = -1;
   e.alive = true;
   e.respawnInMs = 0;
+  e.graceMs = 0;
 }
 
 /** 발판 위를 좌우로 순찰한다. 앞이 벽이거나 발밑이 끊기면 돌아선다(떨어지지 않는다). */

@@ -16,7 +16,9 @@ import {
   HURT_KNOCKBACK_VX,
   HURT_KNOCKBACK_VY,
   HURT_STUN_MS,
+  ENEMY_RESPAWN_CLEAR_PX,
   ENEMY_RESPAWN_MS,
+  ENEMY_SPAWN_GRACE_MS,
   STOMP_BOUNCE,
 } from '../shared/rules/abilities';
 import { judgeContact, overlaps, type Box } from '../shared/rules/stomp';
@@ -32,7 +34,7 @@ import {
   stepSpilledCoin,
   type SpilledCoin,
 } from './entities/spilledCoin';
-import { TILE, VIEW_W, type Tuning } from '../shared/rules/tuning';
+import { TILE, type Tuning } from '../shared/rules/tuning';
 
 /** 게임 루프 → 바깥(HUD·TTS·학습 이벤트)으로 나가는 알림. 프레임마다가 아니라 일이 생길 때만. */
 export type WorldEvent =
@@ -303,12 +305,19 @@ export function stepWorld(
   for (const e of w.enemies) {
     if (!e.alive) {
       e.respawnInMs = Math.max(0, e.respawnInMs - dt * 1000);
-      const offScreen =
-        Math.abs(e.home.x + e.w / 2 - (w.player.x + w.player.w / 2)) > VIEW_W / 2 + 2 * TILE;
-      if (e.respawnInMs <= 0 && offScreen) resetEnemy(e);
+      const clear =
+        Math.abs(e.home.x + e.w / 2 - (w.player.x + w.player.w / 2)) > ENEMY_RESPAWN_CLEAR_PX;
+      if (e.respawnInMs <= 0 && clear) {
+        resetEnemy(e);
+        e.graceMs = ENEMY_SPAWN_GRACE_MS;
+      }
       continue;
     }
     stepEnemy(e, w.map, dt);
+    if (e.graceMs > 0) {
+      e.graceMs = Math.max(0, e.graceMs - dt * 1000);
+      continue;
+    }
     const contact = judgeContact(
       w.player,
       prevBottom,

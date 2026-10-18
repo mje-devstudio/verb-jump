@@ -40,7 +40,12 @@ export const ENEMY_W = 12;
 export const ENEMY_H = 12;
 export const ENEMY_SPEED = 20;
 /**
- * 제안값: 밟힌 동사 적이 다시 생기는 시간(ms). 화면 밖일 때만 다시 생긴다.
+ * 제안값: 밟힌 동사 적이 다시 생기는 시간(ms).
  * 오답 동사를 밟은 뒤 맞는 동사 적이 이미 사라져 있으면 길이 막히는(소프트락) 일을 막는다.
+ * 처음엔 "화면 밖일 때만"이었는데, 고르기 구역이 화면보다 좁아 영영 다시 생기지 않았다(이슈 004).
  */
 export const ENEMY_RESPAWN_MS = 5000;
+/** 제안값: 주인공이 원래 자리에서 이만큼(px) 넘게 떨어져 있어야 다시 생긴다(머리 위·몸 안에 생기지 않게). */
+export const ENEMY_RESPAWN_CLEAR_PX = 30;
+/** 제안값: 다시 생긴 직후 깜빡이며 밟기·피격이 없는 시간(ms). */
+export const ENEMY_SPAWN_GRACE_MS = 1000;

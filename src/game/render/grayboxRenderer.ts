@@ -223,7 +223,9 @@ export class GrayboxRenderer {
         this.enemyGraphics.set(e, g);
       }
       const label = this.label(e, e.verb);
-      g.visible = label.visible = e.alive;
+      const blinking = e.graceMs > 0 && !reducedMotion && Math.floor(this.frame / 4) % 2 === 1;
+      g.visible = label.visible = e.alive && !blinking;
+      g.alpha = e.graceMs > 0 && reducedMotion ? 0.5 : 1;
       g.position.set(Math.round(e.x), Math.round(e.y));
       label.position.set(Math.round(e.x + e.w / 2), Math.round(e.y) - 1);
     }

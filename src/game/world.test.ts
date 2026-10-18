@@ -168,17 +168,31 @@ describe('F08 클리어와 적 재등장', () => {
     expect(events.filter((t) => t === 'stage_clear')).toHaveLength(1);
   });
 
-  it('밟힌 적은 5초 뒤, 화면 밖일 때만 같은 자리에 다시 생긴다(오답을 밟아도 길이 막히지 않게)', () => {
+  it('밟힌 적은 5초 뒤, 주인공이 그 자리에서 떨어져 있으면 다시 생기고 1초 동안은 닿아도 아무 일이 없다', () => {
     const w = createWorld(lvl([{ verb: 'climb', col: 8, row: 5 }]));
     w.player.x = enemy(w).x + 1;
     w.player.y = enemy(w).y - 30;
     run(w, 30, {});
     expect(enemy(w).alive).toBe(false);
+    // 원래 자리 바로 위에 서 있으면 시간이 지나도 다시 생기지 않는다
+    w.player.x = enemy(w).home.x;
     run(w, Math.ceil(ENEMY_RESPAWN_MS / 1000 / STEP_S), {});
-    expect(enemy(w).alive).toBe(false); // 시간이 지나도 화면 안이면 그대로
-    w.player.x = 28 * TILE; // 멀리(화면 밖)
+    expect(enemy(w).alive).toBe(false);
+    // 조금(3칸 남짓) 떨어지면 다시 생긴다 — 화면 밖일 필요는 없다(이슈 004)
+    w.player.x = enemy(w).home.x - 4 * TILE;
     run(w, 1, {});
     expect(enemy(w).alive).toBe(true);
-    expect(enemy(w).x).toBe(enemy(w).home.x);
+    expect(enemy(w).graceMs).toBeGreaterThan(0);
+    // 등장 직후 몸에 닿아도 피격·밟기 없음
+    drainEvents(w);
+    w.player.x = enemy(w).x;
+    w.player.y = enemy(w).y;
+    const events: string[] = [];
+    for (let i = 0; i < 10; i++) {
+      run(w, 1, {});
+      for (const e of drainEvents(w)) events.push(e.type);
+    }
+    expect(events).not.toContain('hurt');
+    expect(events).not.toContain('verb_gained');
   });
 });

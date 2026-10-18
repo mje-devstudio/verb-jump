@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import commuteRaw from '../../../public/maps/commute.tmj?raw';
-import { DEFAULT_TUNING as T } from '../../shared/rules/tuning';
+import { DEFAULT_TUNING as T, STEP_S, TILE } from '../../shared/rules/tuning';
+import { NO_CONTROLS } from '../input';
+import { createWorld, stepWorld, type World } from '../world';
 import { COMMUTE_VERBS } from '../data/verbs';
 import {
   canReachLetter,
@@ -103,5 +105,36 @@ describe('F08·F29 레벨 점검 — 하나라도 실패하면 CI 실패', () =>
     if (!r) return;
     expect(canReachLetter(level.map, T, r, { useFloat: true })).toBe(true);
     expect(canReachLetter(level.map, T, r, { useFloat: false })).toBe(false);
+  });
+});
+
+describe('이슈 004 — 오답을 밟아도 길이 막히지 않는다', () => {
+  /** minCol 오른쪽의 살아 있는 verb 적을 위에서 밟는다. */
+  function stomp(w: World, verb: string, minCol: number) {
+    const e = w.enemies.find((x) => x.verb === verb && x.alive && x.home.x >= minCol * TILE);
+    if (!e) throw new Error(`${verb} 적이 없습니다`);
+    w.player.x = e.x + 1;
+    w.player.y = e.y - 30;
+    w.player.vx = 0;
+    w.player.vy = 0;
+    for (let i = 0; i < 40 && e.alive; i++) stepWorld(w, NO_CONTROLS, T, STEP_S);
+    return e;
+  }
+
+  // 각 고르기 구역: 맞는 적을 밟은 뒤 오답을 밟고, 다음 장애물 앞에서 기다리면 맞는 적이 다시 나와야 한다.
+  it.each([
+    ['구간 1', 'climb', 'sleep', 25, 48],
+    ['구간 2', 'float', 'dance', 114, 136],
+    ['구간 3', 'break', 'brake', 200, 230],
+  ])('%s: %s → %s 순서로 밟아도 맞는 적이 다시 나온다', (_, right, wrong, minCol, waitCol) => {
+    const w = createWorld(level);
+    const e = stomp(w, right, minCol);
+    stomp(w, wrong, minCol);
+    expect(w.verb).toBe(wrong);
+    expect(e.alive).toBe(false);
+    w.player.x = waitCol * TILE;
+    w.player.y = 15 * TILE - w.player.h + 10;
+    for (let i = 0; i < 600 && !e.alive; i++) stepWorld(w, NO_CONTROLS, T, STEP_S);
+    expect(e.alive).toBe(true);
   });
 });
