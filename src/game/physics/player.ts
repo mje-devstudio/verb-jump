@@ -101,16 +101,14 @@ export function stepPlayer(
   }
 
   // 4) 중력: 떨어질 때 fallMul 배로 무겁게, 최대 낙하 속도 제한.
-  //    이동량은 스텝 전후 속도의 평균으로 계산한다(등가속 운동에서 정확). 단순히 갱신 뒤 속도로
-  //    옮기면 최고 높이가 약 42.7px로 PRD 기준(약 45px)보다 낮아진다.
+  //    속도를 먼저 바꾸고 그 속도로 옮긴다(semi-implicit Euler) — 점프 손맛 실험실과 같은 방식.
+  //    앞뒤 속도 평균으로 옮기면 공중에 1프레임 더 떠서 레벨 규칙 거리와 어긋난다(docs/issues/002).
   const g = p.vy > 0 ? t.gravity * t.fallMul : t.gravity;
-  const vy0 = p.vy;
   p.vy = Math.min(p.vy + g * dt, t.maxFall);
-  const dy = ((vy0 + p.vy) / 2) * dt;
 
   // 5) 충돌: 축을 나눠 x 먼저, y 다음.
   p.wall = moveX(p, map, p.vx * dt);
-  const hit = moveY(p, map, dy);
+  const hit = moveY(p, map, p.vy * dt);
   if (hit === 'ceiling') p.rising = false;
   p.onGround = hit === 'ground';
 

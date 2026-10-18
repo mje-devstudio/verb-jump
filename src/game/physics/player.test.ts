@@ -44,15 +44,13 @@ function apexHeight(holdSteps: number): number {
 }
 
 describe('F05 이동과 점프', () => {
-  it('끝까지 누르면 최고 높이가 약 45px이다', () => {
-    expect(apexHeight(120)).toBeGreaterThan(43);
-    expect(apexHeight(120)).toBeLessThan(47);
+  // 1/60초 시뮬레이션 값(실험실과 같은 계산). 연속 공식으로는 45.1px·7.2px다.
+  it('끝까지 누르면 최고 높이가 42.75px이다(연속 공식 약 45px)', () => {
+    expect(apexHeight(120)).toBeCloseTo(42.75, 2);
   });
 
-  it('짧게 누르면(누르자마자 뗌) 약 7px만 뛴다', () => {
-    const h = apexHeight(0);
-    expect(h).toBeGreaterThan(5.5);
-    expect(h).toBeLessThan(8.5);
+  it('짧게 누르면(누르자마자 뗌) 6.3px만 뛴다(연속 공식 약 7px)', () => {
+    expect(apexHeight(0)).toBeCloseTo(6.3, 2);
   });
 
   it('누르는 길이가 길수록 높이 뛴다', () => {

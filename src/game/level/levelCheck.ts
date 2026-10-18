@@ -10,6 +10,10 @@ export interface EdgeJumpResult {
   landX: number | null;
   /** 출발 지점과 착지 지점의 x 거리(px). */
   distance: number | null;
+  /** 점프한 프레임부터 착지한 프레임까지 프레임 수(양 끝 포함). 실험실 측정과 같은 방식. */
+  frames: number | null;
+  /** 땅(맵에서 가장 낮은 윗면)부터 센 발판 높이(칸). 맵 바닥부터 세지 않는다. */
+  heightTiles: number;
 }
 
 const standable = (m: TileMap, c: number, r: number) => {
@@ -20,6 +24,17 @@ const solid = (m: TileMap, c: number, r: number) => tileAt(m, c, r) === Tile.Sol
 /** 위가 막히지 않아 설 수 있는 윗면. */
 const surface = (m: TileMap, c: number, r: number) =>
   standable(m, c, r) && !solid(m, c, r - 1) && !solid(m, c, r - 2);
+
+/**
+ * 땅의 윗면 행: 설 수 있는 윗면 중 가장 아래 행.
+ * 높이를 맵 바닥부터 세면 땅 두께만큼 높게 나와(예: 3칸 언덕이 '5칸') 헷갈리므로 땅부터 센다.
+ */
+export function groundRow(map: TileMap): number {
+  for (let r = map.rows - 1; r >= 0; r--) {
+    for (let c = 0; c < map.cols; c++) if (surface(map, c, r)) return r;
+  }
+  return map.rows;
+}
 
 /** 발판 끝: 윗면인데 dir 쪽 이웃이 윗면도 벽도 아닌 칸. */
 export function findEdges(map: TileMap): { col: number; row: number; dir: -1 | 1 }[] {
@@ -47,7 +62,9 @@ export function simulateEdgeJump(
   tuning: Readonly<Tuning>,
   edge: { col: number; row: number; dir: -1 | 1 },
   maxSeconds = 4,
+  ground = groundRow(map),
 ): EdgeJumpResult {
+  const heightTiles = ground - edge.row;
   const p = createPlayer({ x: 0, y: (edge.row - 1) * TILE });
   // 몸의 대부분이 이미 발판 밖으로 나간 상태(1px만 걸침) = 가장 늦게 뛰는 경우
   p.x = edge.dir > 0 ? (edge.col + 1) * TILE - 1 : edge.col * TILE - p.w + 1;
@@ -66,16 +83,22 @@ export function simulateEdgeJump(
     stepPlayer(p, input, map, tuning, STEP_S);
     input.jumpPressed = false;
     if (i > 0 && p.onGround) {
-      return { ...edge, landX: p.x, distance: Math.abs(p.x - startX) };
+      return { ...edge, heightTiles, landX: p.x, distance: Math.abs(p.x - startX), frames: i + 1 };
     }
     if (p.y > mapHeightPx(map)) break;
   }
-  return { ...edge, landX: null, distance: null };
+  return { ...edge, heightTiles, landX: null, distance: null, frames: null };
 }
 
 /** 모든 발판 끝에서 앞뒤로 달려 뛰어, 구멍에 빠지는 곳을 돌려준다. */
 export function findPitLandings(map: TileMap, tuning: Readonly<Tuning>): EdgeJumpResult[] {
+  const ground = groundRow(map);
   return findEdges(map)
-    .map((e) => simulateEdgeJump(map, tuning, e))
+    .map((e) => simulateEdgeJump(map, tuning, e, 4, ground))
     .filter((r) => r.landX === null);
+}
+
+/** 개발 모드 경고 문구(F29). 예: "col 52 · 땅에서 5칸 · 오른쪽으로 달려 뛰면 구멍" */
+export function describePit(r: EdgeJumpResult): string {
+  return `col ${r.col} · 땅에서 ${r.heightTiles}칸 · ${r.dir > 0 ? '오른쪽' : '왼쪽'}으로 달려 뛰면 구멍`;
 }

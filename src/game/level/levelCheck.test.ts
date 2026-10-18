@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_TUNING } from '../../shared/rules/tuning';
 import { GRAYBOX_LEVEL } from './grayboxLevel';
-import { findEdges, findPitLandings, simulateEdgeJump } from './levelCheck';
+import { describePit, findEdges, findPitLandings, groundRow, simulateEdgeJump } from './levelCheck';
 import { parseAsciiMap } from './tilemap';
 
 const flat = (gapAt: number, gapLen: number, cols = 40) => {
@@ -14,28 +14,43 @@ const flat = (gapAt: number, gapLen: number, cols = 40) => {
 };
 
 describe('레벨 점검(달려 뛰기 시뮬레이션)', () => {
-  it('평지 달려 뛰기 거리는 PRD 기준(약 51px) 근처다', () => {
-    const map = flat(10, 3);
-    const r = simulateEdgeJump(map, DEFAULT_TUNING, { col: 9, row: 2, dir: 1 });
-    expect(r.distance).not.toBeNull();
-    expect(r.distance ?? 0).toBeGreaterThan(45);
-    expect(r.distance ?? 0).toBeLessThan(60);
+  /** 땅 위 h칸 발판 끝에서 오른쪽으로 달려 뛰는 맵. */
+  const ledge = (h: number) => {
+    const rows = ['P' + ' '.repeat(39)];
+    for (let r = 1; r <= 12; r++) {
+      rows.push(r >= 13 - h ? '#   #####' + ' '.repeat(30) + '#' : '#' + ' '.repeat(38) + '#');
+    }
+    rows.push('#'.repeat(40));
+    return { map: parseAsciiMap(rows).map, edge: { col: 8, row: 13 - h, dir: 1 as const } };
+  };
+
+  // 실험실 1/60초 시뮬레이션과 같은 값이어야 한다(PRD 레벨 설계 규칙의 거리).
+  it.each([
+    [0, 51.0, 34],
+    [3, 60.0, 40],
+    [6, 67.5, 45],
+  ])('땅에서 %i칸 높이에서 달려 뛰면 %fpx, %i프레임', (h, dist, frames) => {
+    const { map, edge } = ledge(h);
+    const r = simulateEdgeJump(map, DEFAULT_TUNING, edge);
+    expect(r.heightTiles).toBe(h);
+    expect(r.distance).toBeCloseTo(dist, 5);
+    expect(r.frames).toBe(frames);
   });
 
-  it('높이 3칸 발판에서 뛰면 평지보다 멀리 간다', () => {
+  it('높이는 맵 바닥이 아니라 땅 윗면부터 센다', () => {
     const { map } = parseAsciiMap([
-      '#                                      #',
-      '#                                      #',
-      '#                                      #',
-      '#                                      #',
-      '#P  ####                               #',
-      '#   ####                               #',
-      '#   ####                               #',
-      '########################################',
+      '#          #',
+      '#          #',
+      '#P  ###    #',
+      '#   ###    #',
+      '#   ###    #',
+      '############',
+      '############',
     ]);
-    const high = simulateEdgeJump(map, DEFAULT_TUNING, { col: 7, row: 4, dir: 1 });
-    const low = simulateEdgeJump(flat(10, 3), DEFAULT_TUNING, { col: 9, row: 2, dir: 1 });
-    expect(high.distance ?? 0).toBeGreaterThan(low.distance ?? 0);
+    expect(groundRow(map)).toBe(5);
+    const r = simulateEdgeJump(map, DEFAULT_TUNING, { col: 6, row: 2, dir: 1 });
+    expect(r.heightTiles).toBe(3);
+    expect(describePit({ ...r, landX: null })).toContain('땅에서 3칸');
   });
 
   it('달려 뛰어도 못 건너는 넓은 구멍은 경고로 잡힌다', () => {
