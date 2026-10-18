@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HURT_INVINCIBLE_MS } from '../shared/rules/abilities';
+import { ENEMY_RESPAWN_MS, HURT_INVINCIBLE_MS } from '../shared/rules/abilities';
 import { DEFAULT_TUNING as T, STEP_S, TILE } from '../shared/rules/tuning';
 import { COMMUTE_VERBS } from './data/verbs';
 import { NO_CONTROLS, type ControlSnapshot } from './input';
@@ -131,5 +131,36 @@ describe('F06 밟기와 동사 얻기', () => {
     run(w, 600, {});
     expect(enemy(w).alive).toBe(true);
     expect(enemy(w).x + enemy(w).w).toBeLessThanOrEqual(13 * TILE);
+  });
+});
+
+describe('F08 클리어와 적 재등장', () => {
+  it('회사 문에 닿으면 클리어 알림이 한 번 나가고 세계가 멈춘다', () => {
+    const base = lvl([]);
+    const w = createWorld({ ...base, door: { x: 9 * TILE, y: 3 * TILE, w: 20, h: 30 } });
+    const events: string[] = [];
+    for (let i = 0; i < 600 && !w.cleared; i++) {
+      run(w, 1, { right: true });
+      for (const e of drainEvents(w)) events.push(e.type);
+    }
+    expect(w.cleared).toBe(true);
+    const x = w.player.x;
+    run(w, 30, { right: true });
+    expect(w.player.x).toBe(x);
+    expect(events.filter((t) => t === 'stage_clear')).toHaveLength(1);
+  });
+
+  it('밟힌 적은 5초 뒤, 화면 밖일 때만 같은 자리에 다시 생긴다(오답을 밟아도 길이 막히지 않게)', () => {
+    const w = createWorld(lvl([{ verb: 'climb', col: 8, row: 5 }]));
+    w.player.x = enemy(w).x + 1;
+    w.player.y = enemy(w).y - 30;
+    run(w, 30, {});
+    expect(enemy(w).alive).toBe(false);
+    run(w, Math.ceil(ENEMY_RESPAWN_MS / 1000 / STEP_S), {});
+    expect(enemy(w).alive).toBe(false); // 시간이 지나도 화면 안이면 그대로
+    w.player.x = 28 * TILE; // 멀리(화면 밖)
+    run(w, 1, {});
+    expect(enemy(w).alive).toBe(true);
+    expect(enemy(w).x).toBe(enemy(w).home.x);
   });
 });

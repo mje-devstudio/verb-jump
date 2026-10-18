@@ -7,6 +7,8 @@ export interface GameSnapshot {
   meaning: string | null;
   /** 동사를 얻은 순간 띄우는 단어 카드. id가 바뀌면 새 카드. */
   card: { id: number; verb: string; entry: VerbEntry; correct: boolean } | null;
+  /** 회사 문에 닿았는가(결과 화면 F11 전까지는 간단한 표시만). */
+  cleared: boolean;
 }
 
 export interface GameStore {
@@ -20,6 +22,7 @@ export const INITIAL_SNAPSHOT: GameSnapshot = Object.freeze({
   verb: null,
   meaning: null,
   card: null,
+  cleared: false,
 });
 
 export function createGameStore(initial: GameSnapshot = INITIAL_SNAPSHOT): GameStore {

@@ -16,10 +16,11 @@ import {
   HURT_KNOCKBACK_VX,
   HURT_KNOCKBACK_VY,
   HURT_STUN_MS,
+  ENEMY_RESPAWN_MS,
   STOMP_BOUNCE,
 } from '../shared/rules/abilities';
-import { judgeContact } from '../shared/rules/stomp';
-import { TILE, type Tuning } from '../shared/rules/tuning';
+import { judgeContact, overlaps, type Box } from '../shared/rules/stomp';
+import { TILE, VIEW_W, type Tuning } from '../shared/rules/tuning';
 
 /** 게임 루프 → 바깥(HUD·TTS·학습 이벤트)으로 나가는 알림. 프레임마다가 아니라 일이 생길 때만. */
 export type WorldEvent =
@@ -27,7 +28,17 @@ export type WorldEvent =
   | { type: 'hurt' }
   | { type: 'fell' }
   | { type: 'checkpoint'; index: number }
+  | { type: 'stage_clear' }
   | AbilityEvent;
+
+/** 철자 코인 자리(F27에서 줍기·HUD를 붙인다). */
+export interface LetterSpawn {
+  char: string;
+  x: number;
+  y: number;
+  /** 닿으려면 필요한 능력(레벨 점검용). 없으면 'none'. */
+  ability?: 'climb' | 'float' | 'break' | 'none';
+}
 
 export interface LevelDef {
   map: TileMap;
@@ -36,6 +47,11 @@ export interface LevelDef {
   /** 체크포인트 자리(시작 위치와 같은 형식: 서 있는 칸의 왼쪽 위). 구간마다 하나(PRD). 0번은 시작 위치. */
   checkpoints: readonly Point[];
   verbs: Readonly<Record<string, VerbEntry>>;
+  /** 닿으면 클리어하는 회사 문. */
+  door?: Box;
+  letters?: readonly LetterSpawn[];
+  /** float처럼 능력이 있어야 건너는 틈의 열 범위(레벨 점검이 의도된 틈으로 본다). */
+  abilityGaps?: readonly (readonly [number, number])[];
 }
 
 /** 프레임마다 바뀌는 게임 상태. React 밖, 게임 루프 안에만 둔다. */
@@ -59,6 +75,8 @@ export interface World {
   clockPenaltyMs: number;
   checkpoint: number;
   falls: number;
+  /** 회사 문에 닿았는가. 클리어 뒤에는 세계가 멈춘다. */
+  cleared: boolean;
   /** 이번 프레임까지 쌓인 알림. 소비하는 쪽이 drainEvents로 비운다. */
   readonly events: WorldEvent[];
 }
@@ -89,6 +107,7 @@ export function createWorld(level: LevelDef): World {
     clockPenaltyMs: 0,
     checkpoint: 0,
     falls: 0,
+    cleared: false,
     events: [],
   };
 }
@@ -162,6 +181,7 @@ export function stepWorld(
   dt: number,
   opts: WorldOptions = {},
 ): void {
+  if (w.cleared) return;
   w.prev.x = w.player.x;
   w.prev.y = w.player.y;
   const ctx = abilityContext(w, input, tuning, dt);
@@ -183,8 +203,14 @@ export function stepWorld(
 
   // 3) 적과 밟기·피격
   for (const e of w.enemies) {
+    if (!e.alive) {
+      e.respawnInMs = Math.max(0, e.respawnInMs - dt * 1000);
+      const offScreen =
+        Math.abs(e.home.x + e.w / 2 - (w.player.x + w.player.w / 2)) > VIEW_W / 2 + 2 * TILE;
+      if (e.respawnInMs <= 0 && offScreen) resetEnemy(e);
+      continue;
+    }
     stepEnemy(e, w.map, dt);
-    if (!e.alive) continue;
     const contact = judgeContact(
       w.player,
       prevBottom,
@@ -195,6 +221,7 @@ export function stepWorld(
     );
     if (contact === 'stomp') {
       e.alive = false;
+      e.respawnInMs = ENEMY_RESPAWN_MS;
       w.player.vy = -tuning.jumpVel * STOMP_BOUNCE;
       w.player.onGround = false;
       gainVerb(w, e.verb, ctx);
@@ -215,6 +242,11 @@ export function stepWorld(
   if (next !== undefined && w.player.x >= next.x) {
     w.checkpoint++;
     w.events.push({ type: 'checkpoint', index: w.checkpoint });
+  }
+  if (w.level.door && overlaps(w.player, w.level.door)) {
+    w.cleared = true;
+    w.events.push({ type: 'stage_clear' });
+    return;
   }
   if (w.player.y > mapHeightPx(w.map) + 2 * TILE) {
     w.falls++;

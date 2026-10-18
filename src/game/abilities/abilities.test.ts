@@ -49,6 +49,8 @@ function run(
 /** 7칸 높이, 3칸 폭 벽. */
 const WALL = [
   '#               #',
+  '#               #',
+  '#               #',
   '#      ###      #',
   '#      ###      #',
   '#      ###      #',
@@ -127,7 +129,7 @@ describe('F07 climb', () => {
     let stoodOnTop = false;
     for (let i = 0; i < 200 && !stoodOnTop; i++) {
       run(w, 1, { right: true, verbHeld: true });
-      stoodOnTop = w.player.onGround && w.player.y + w.player.h === 1 * TILE; // 7칸 벽 꼭대기
+      stoodOnTop = w.player.onGround && w.player.y + w.player.h === 3 * TILE; // 7칸 벽 꼭대기
     }
     expect(stoodOnTop).toBe(true);
   });

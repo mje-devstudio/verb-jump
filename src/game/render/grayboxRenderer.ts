@@ -14,6 +14,8 @@ const COLORS = {
   eye: 0x1f2430,
   enemy: 0x9ca3af,
   label: 0xfacc15,
+  door: 0x4ade80,
+  flag: 0x60a5fa,
 } as const;
 
 /** 도트 리소스(F12) 전까지 같은 크기의 회색 상자로 그린다. 능력은 색이 아니라 자세(모양)로 구분한다. */
@@ -25,6 +27,7 @@ export class GrayboxRenderer {
   private readonly labels = new Map<object, Text>();
   private readonly enemyGraphics = new Map<object, Graphics>();
   private mapVersion = -1;
+  private propsDrawn = false;
   private frame = 0;
 
   private constructor(private readonly app: Application) {
@@ -127,12 +130,43 @@ export class GrayboxRenderer {
     }
   }
 
+  /** 문·체크포인트·철자 코인. 철자 코인 줍기(F27)가 들어오면 코인은 따로 갱신한다. */
+  private drawProps(world: World): void {
+    const g = new Graphics();
+    const { door, letters = [], checkpoints } = world.level;
+    if (door) {
+      g.rect(door.x, door.y, door.w, door.h).fill(COLORS.door);
+      g.rect(door.x + door.w - 5, door.y + door.h / 2, 2, 2).fill(COLORS.eye);
+    }
+    for (const c of checkpoints.slice(1)) {
+      g.rect(c.x + 2, c.y - 6, 1, 16).fill(COLORS.oneWay);
+      g.rect(c.x + 3, c.y - 6, 5, 4).fill(COLORS.flag);
+    }
+    this.level.addChildAt(g, 1);
+    for (const l of letters) {
+      const coin = new Graphics().circle(l.x + 5, l.y + 5, 5).fill(COLORS.label);
+      const t = new Text({
+        text: l.char,
+        style: { fontFamily: 'monospace', fontSize: 8, fontWeight: 'bold', fill: COLORS.eye },
+        resolution: 1,
+      });
+      t.anchor.set(0.5);
+      t.position.set(l.x + 5, l.y + 5);
+      this.level.addChildAt(coin, 2);
+      this.level.addChildAt(t, 3);
+    }
+  }
+
   /** alpha: 직전 스텝과 지금 스텝 사이 보간 비율(고주사율 화면에서 부드럽게). */
   render(world: World, alpha: number, reducedMotion = false): void {
     this.frame++;
     if (world.mapVersion !== this.mapVersion) {
       this.drawTiles(world.map);
       this.mapVersion = world.mapVersion;
+    }
+    if (!this.propsDrawn) {
+      this.drawProps(world);
+      this.propsDrawn = true;
     }
 
     const p = world.player;

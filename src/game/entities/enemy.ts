@@ -13,6 +13,8 @@ export interface VerbEnemy {
   readonly h: number;
   dir: -1 | 1;
   alive: boolean;
+  /** 밟힌 뒤 다시 생기기까지 남은 시간(ms). */
+  respawnInMs: number;
 }
 
 export interface EnemySpawn {
@@ -25,7 +27,17 @@ export interface EnemySpawn {
 export function createEnemy(s: EnemySpawn): VerbEnemy {
   const x = s.col * TILE + (TILE - ENEMY_W) / 2;
   const y = (s.row + 1) * TILE - ENEMY_H;
-  return { verb: s.verb, home: { x, y }, x, y, w: ENEMY_W, h: ENEMY_H, dir: -1, alive: true };
+  return {
+    verb: s.verb,
+    home: { x, y },
+    x,
+    y,
+    w: ENEMY_W,
+    h: ENEMY_H,
+    dir: -1,
+    alive: true,
+    respawnInMs: 0,
+  };
 }
 
 export function resetEnemy(e: VerbEnemy): void {
@@ -33,6 +45,7 @@ export function resetEnemy(e: VerbEnemy): void {
   e.y = e.home.y;
   e.dir = -1;
   e.alive = true;
+  e.respawnInMs = 0;
 }
 
 /** 발판 위를 좌우로 순찰한다. 앞이 벽이거나 발밑이 끊기면 돌아선다(떨어지지 않는다). */

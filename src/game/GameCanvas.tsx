@@ -2,13 +2,21 @@ import { useEffect, useRef, useState } from 'react';
 import { DEFAULT_TUNING, STEP_S, VIEW_H, VIEW_W } from '../shared/rules/tuning';
 import { speak } from '../shared/lib/tts';
 import { KeyboardControls } from './input';
-import { grayboxLevel } from './level/grayboxLevel';
+import { COMMUTE_VERBS } from './data/verbs';
+import { parseTiledMap } from './level/tiled';
 import { FixedStepLoop, LoopDriver, pauseOnHidden } from './loop';
 import { GrayboxRenderer } from './render/grayboxRenderer';
 import type { GameStore } from './store';
 import { createWorld, drainEvents, stepWorld, type World } from './world';
 
-type RunState = 'loading' | 'running' | 'hidden' | 'resuming';
+type RunState = 'loading' | 'running' | 'hidden' | 'resuming' | 'error';
+
+/** 1스테이지 맵. 스테이지 API(F01)가 들어오면 응답의 map 주소로 바뀐다. */
+async function loadCommuteLevel() {
+  const res = await fetch('/maps/commute.tmj');
+  if (!res.ok) throw new Error(`맵 요청 실패: ${res.status}`);
+  return parseTiledMap((await res.json()) as unknown, COMMUTE_VERBS);
+}
 
 /** 창 크기에 맞는 가장 큰 정수 배율(nearest 확대 + 레터박스). */
 function integerScale(w: number, h: number): number {
@@ -27,6 +35,8 @@ function forwardEvents(world: World, store: GameStore, nextCardId: () => number)
         card: { id: nextCardId(), verb: e.verb, entry, correct: e.correct },
       });
       speak(e.verb);
+    } else if (e.type === 'stage_clear') {
+      store.update({ cleared: true });
     }
   }
 }
@@ -45,48 +55,60 @@ export function GameCanvas({ store }: { store: GameStore }) {
     let disposed = false;
     let cleanup: (() => void) | null = null;
 
-    void GrayboxRenderer.create().then((renderer) => {
-      if (disposed) {
-        renderer.destroy(); // StrictMode 이중 마운트·빠른 이탈: 초기화가 끝난 뒤 정리
-        return;
-      }
-      const world = createWorld(grayboxLevel());
-      // 개발 모드에서만 콘솔·자동 점검용으로 world를 노출한다(배포 빌드에서는 제거됨).
-      if (import.meta.env.DEV) Object.assign(window, { __verbJumpWorld: world });
-      const controls = new KeyboardControls();
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-      let cardId = 0;
-      const loop = new FixedStepLoop(() =>
-        stepWorld(world, controls.sample(), DEFAULT_TUNING, STEP_S),
-      );
-      const driver = new LoopDriver(loop, (alpha) => {
-        forwardEvents(world, store, () => ++cardId);
-        renderer.render(world, alpha, reducedMotion.matches);
-      });
+    const rendererReady = GrayboxRenderer.create();
+    Promise.all([rendererReady, loadCommuteLevel()]).then(
+      ([renderer, level]) => {
+        if (disposed) {
+          renderer.destroy(); // StrictMode 이중 마운트·빠른 이탈: 초기화가 끝난 뒤 정리
+          return;
+        }
+        const world = createWorld(level);
+        // 개발 모드에서만 콘솔·자동 점검용으로 world를 노출한다(배포 빌드에서는 제거됨).
+        if (import.meta.env.DEV) Object.assign(window, { __verbJumpWorld: world });
+        const controls = new KeyboardControls();
+        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        let cardId = 0;
+        const loop = new FixedStepLoop(() =>
+          stepWorld(world, controls.sample(), DEFAULT_TUNING, STEP_S),
+        );
+        const driver = new LoopDriver(loop, (alpha) => {
+          forwardEvents(world, store, () => ++cardId);
+          renderer.render(world, alpha, reducedMotion.matches);
+        });
 
-      host.appendChild(renderer.canvas);
-      const fit = () => {
-        const k = integerScale(host.clientWidth, host.clientHeight);
-        renderer.canvas.style.width = `${VIEW_W * k}px`;
-        renderer.canvas.style.height = `${VIEW_H * k}px`;
-      };
-      fit();
-      const resizeObserver = new ResizeObserver(fit);
-      resizeObserver.observe(host);
-      const stopVisibility = pauseOnHidden(driver, {
-        onChange: (s) => setRunState(s),
-      });
-      driver.start();
-      setRunState('running');
+        host.appendChild(renderer.canvas);
+        const fit = () => {
+          const k = integerScale(host.clientWidth, host.clientHeight);
+          renderer.canvas.style.width = `${VIEW_W * k}px`;
+          renderer.canvas.style.height = `${VIEW_H * k}px`;
+        };
+        fit();
+        const resizeObserver = new ResizeObserver(fit);
+        resizeObserver.observe(host);
+        const stopVisibility = pauseOnHidden(driver, {
+          onChange: (s) => setRunState(s),
+        });
+        driver.start();
+        setRunState('running');
 
-      cleanup = () => {
-        driver.stop();
-        stopVisibility();
-        resizeObserver.disconnect();
-        controls.dispose();
-        renderer.destroy();
-      };
-    });
+        cleanup = () => {
+          driver.stop();
+          stopVisibility();
+          resizeObserver.disconnect();
+          controls.dispose();
+          renderer.destroy();
+        };
+      },
+      (err: unknown) => {
+        console.error(err);
+        // 렌더러는 만들어졌을 수 있으니 정리한다
+        void rendererReady.then(
+          (r) => r.destroy(),
+          () => {},
+        );
+        if (!disposed) setRunState('error');
+      },
+    );
 
     return () => {
       disposed = true;
@@ -101,6 +123,7 @@ export function GameCanvas({ store }: { store: GameStore }) {
           {runState === 'loading' && '불러오는 중…'}
           {runState === 'hidden' && '일시정지'}
           {runState === 'resuming' && '3초 뒤 다시 시작해요'}
+          {runState === 'error' && '맵을 불러오지 못했어요. 새로고침해 주세요.'}
         </p>
       )}
     </div>

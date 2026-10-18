@@ -28,11 +28,12 @@ export interface Point {
 }
 
 /**
- * 맵 밖 처리: 좌우 바깥은 벽(화면 밖으로 못 나감), 위는 빈칸, 아래는 구멍(빈칸).
+ * 맵 밖 처리: 좌우 바깥은 벽, 위는 천장(climb로 벽을 타고 맵 위로 나가지 못하게), 아래는 구멍(빈칸).
  */
 export function tileAt(map: TileMap, col: number, row: number): TileId {
   if (col < 0 || col >= map.cols) return Tile.Solid;
-  if (row < 0 || row >= map.rows) return Tile.Empty;
+  if (row < 0) return Tile.Solid;
+  if (row >= map.rows) return Tile.Empty;
   return (map.tiles[row * map.cols + col] ?? Tile.Empty) as TileId;
 }
 

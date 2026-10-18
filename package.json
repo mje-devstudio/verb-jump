@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "map:commute": "node scripts/gen-commute-map.mjs"
   },
   "dependencies": {
     "pixi.js": "^8.22.0",

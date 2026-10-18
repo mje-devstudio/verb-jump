@@ -39,3 +39,8 @@ export const HURT_STUN_MS = 300;
 export const ENEMY_W = 12;
 export const ENEMY_H = 12;
 export const ENEMY_SPEED = 20;
+/**
+ * 제안값: 밟힌 동사 적이 다시 생기는 시간(ms). 화면 밖일 때만 다시 생긴다.
+ * 오답 동사를 밟은 뒤 맞는 동사 적이 이미 사라져 있으면 길이 막히는(소프트락) 일을 막는다.
+ */
+export const ENEMY_RESPAWN_MS = 5000;

@@ -1,6 +1,9 @@
 import { isSolid, mapHeightPx, Tile, tileAt, type TileMap } from './tilemap';
-import { createPlayer, stepPlayer } from '../physics/player';
-import { STEP_S, TILE, type Tuning } from '../../shared/rules/tuning';
+import { createPlayer, NO_MODS, stepPlayer } from '../physics/player';
+import { overlaps } from '../../shared/rules/stomp';
+import type { LetterSpawn } from '../world';
+import { FLOAT_MAX_FALL } from '../../shared/rules/abilities';
+import { PLAYER_H, STEP_S, TILE, type Tuning } from '../../shared/rules/tuning';
 
 export interface EdgeJumpResult {
   col: number;
@@ -111,4 +114,73 @@ export function findPitLandings(
 /** 개발 모드 경고 문구(F29). 예: "col 52 · 땅에서 5칸 · 오른쪽으로 달려 뛰면 구멍" */
 export function describePit(r: EdgeJumpResult): string {
   return `col ${r.col} · 땅에서 ${r.heightTiles}칸 · ${r.dir > 0 ? '오른쪽' : '왼쪽'}으로 달려 뛰면 구멍`;
+}
+
+/**
+ * 철자 코인에 닿을 수 있는가(근사, F29 P0 테스트). 코인 근처의 모든 윗면에서(칸 가운데와 발판 끝 1px)
+ * 제자리·좌우로 걷거나 달리며 끝까지 누른 점프를 시뮬레이션해, 몸이 코인 칸에 한 번이라도 겹치면 닿는다고 본다.
+ * float가 필요한 코인은 공중에서 float를 누른 채로 시뮬레이션한다.
+ * 한계: 시작한 윗면까지 실제로 갈 수 있는지(경로)는 보지 않는다. climb·break 코인은 담장 위·벽 너머 윗면이
+ * 능력으로 갈 수 있는 곳이라고 가정한다.
+ */
+export function canReachLetter(
+  map: TileMap,
+  tuning: Readonly<Tuning>,
+  letter: LetterSpawn,
+  opts: { useFloat?: boolean; rangeCols?: number } = {},
+): boolean {
+  const target = { x: letter.x, y: letter.y, w: TILE, h: TILE };
+  const c0 = Math.floor(letter.x / TILE);
+  const range = opts.rangeCols ?? 12;
+  const steps = Math.ceil(3 / STEP_S);
+  for (let r = 0; r < map.rows; r++) {
+    for (let c = c0 - range; c <= c0 + range; c++) {
+      if (!surface(map, c, r)) continue;
+      for (const dir of [-1, 0, 1] as const) {
+        // 칸 가운데 출발 + 발판 끝에 1px만 걸친 출발(실제로 가장 멀리 가는 경우)
+        const starts =
+          dir === 0 ? [c * TILE] : [c * TILE, dir > 0 ? (c + 1) * TILE - 1 : c * TILE - TILE + 1];
+        for (const [sx, speed] of starts.flatMap((x) =>
+          dir === 0
+            ? [[x, 0] as const]
+            : [[x, tuning.maxSpeed / 2] as const, [x, tuning.maxSpeed] as const],
+        )) {
+          const p = createPlayer({ x: 0, y: 0 });
+          p.x = sx;
+          p.y = r * TILE - PLAYER_H;
+          p.vx = dir * speed;
+          p.onGround = true;
+          p.airMs = 0;
+          if (overlaps(p, target)) return true;
+          const input = { left: dir < 0, right: dir > 0, jumpPressed: true, jumpHeld: true };
+          for (let i = 0; i < steps; i++) {
+            const floating = opts.useFloat === true && !p.onGround && p.vy > 0;
+            stepPlayer(
+              p,
+              input,
+              map,
+              tuning,
+              STEP_S,
+              floating ? { maxFall: FLOAT_MAX_FALL } : NO_MODS,
+            );
+            input.jumpPressed = false;
+            if (overlaps(p, target)) return true;
+            if ((i > 0 && p.onGround) || p.y > mapHeightPx(map)) break;
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
+/** 닿을 수 없는 철자 코인 목록. 코인의 ability가 float면 float를 쓴다고 보고 검사한다. */
+export function findUnreachableLetters(
+  map: TileMap,
+  tuning: Readonly<Tuning>,
+  letters: readonly LetterSpawn[],
+): LetterSpawn[] {
+  return letters.filter(
+    (l) => !canReachLetter(map, tuning, l, { useFloat: l.ability === 'float' }),
+  );
 }
