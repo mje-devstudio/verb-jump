@@ -20,6 +20,15 @@ const add = (type, col, row, props = {}, w = T, h = T) =>
   objects.push({ type, x: col * T, y: row * T, width: w, height: h, props });
 const enemy = (verb, col) => add('enemy', col, STAND, { verb });
 const letter = (char, col, row, ability) => add('letter', col, row, { char, ability });
+// 코인: 권장 경로를 따라 줄지어 두어 어디로 어떻게 뛰면 되는지 알려 준다(PRD 코인 배치).
+const coin = (col, row) => add('coin', col, row);
+const coinRow = (c0, c1, row = STAND) => {
+  for (let c = c0; c <= c1; c++) coin(c, row);
+};
+/** 벽 앞 세로 줄 — climb로 오르라는 힌트. 점프로도 닿는 높이(11~14행)까지만 둔다. */
+const coinColumn = (col) => {
+  for (let r = 11; r <= 14; r++) coin(col, r);
+};
 const gap = (c0, c1) => {
   fill(c0, c1, GROUND, ROWS - 1, ' ');
   return [c0, c1];
@@ -32,13 +41,18 @@ fill(COLS - 1, COLS - 1, 0, STAND);
 
 // ── 구간 1 · 집 앞 담장 (climb / 오답 sleep) ──────────────────────────
 add('spawn', 3, STAND);
+coinRow(6, 9);
 enemy('climb', 14); // 소개: 오답 없이 한 번
+coinColumn(21);
+coinRow(22, 23, 10); // 낮은 담장 위
 fill(22, 23, 11, STAND); // 낮은 담장 5칸(점프 42.75px로는 못 넘음)
 // 고르기 앞 체크포인트: 지나가면 능력을 잃는다(소개에서 얻은 climb를 들고 지나가지 못하게)
 const choose = (col) => add('checkpoint', col, STAND, { resetAbility: 'true' });
 choose(27);
 enemy('climb', 32); // 고르기
 enemy('sleep', 38);
+coinRow(29, 30);
+coinColumn(49);
 fill(50, 52, 8, STAND); // 높은 담장 8칸
 letter('B', 51, 7, 'climb'); // B: 높은 담장 위
 
@@ -46,10 +60,22 @@ letter('B', 51, 7, 'climb'); // B: 높은 담장 위
 add('checkpoint', 92, STAND);
 enemy('float', 98); // 소개
 const g1 = gap(108, 113); // 짧은 틈 6칸(달려 뛰기 51px로는 못 건넘)
+[
+  [107, 13],
+  [109, 12],
+  [111, 12],
+  [113, 13],
+].forEach(([c, r]) => coin(c, r)); // float 경로
 choose(116);
 enemy('float', 122); // 고르기
 enemy('dance', 128);
 const g2 = gap(138, 151); // 넓은 틈 14칸
+[
+  [137, 13],
+  [140, 12],
+  [148, 12],
+  [151, 13],
+].forEach(([c, r]) => coin(c, r));
 // R: 넓은 틈 한가운데 공중. 11행이면 float 없이 끝에서 뛰어서는 닿지 않는다(levelCheck 테스트로 확인)
 letter('R', 144, 11, 'float');
 
@@ -58,24 +84,37 @@ add('checkpoint', 182, STAND);
 enemy('break', 188); // 소개
 fill(198, 199, 0, STAND, 'X'); // 금 간 벽(천장까지)
 letter('E', 203, STAND, 'break'); // E: 금 간 벽 너머
+coinRow(201, 202);
 choose(206);
 enemy('break', 210); // 고르기: break와 brake가 함께
 enemy('brake', 216);
 fill(232, 233, 0, STAND, 'X');
 letter('A', 237, STAND, 'break'); // A: 두 번째 금 간 벽 너머
+coinRow(235, 236);
+coinRow(238, 239);
 
 // ── 구간 4 · 회사 앞 골목 (세 동사를 바꿔 가며) ────────────────────────
 add('checkpoint', 272, STAND);
 enemy('climb', 278);
 enemy('sleep', 283);
+coinColumn(291);
 fill(292, 293, 9, STAND); // 담장 7칸
 enemy('float', 300);
 enemy('dance', 305);
 const g3 = gap(312, 321); // 틈 10칸
+[
+  [311, 13],
+  [314, 12],
+  [317, 12],
+  [320, 12],
+  [322, 13],
+].forEach(([c, r]) => coin(c, r));
 enemy('break', 328);
 enemy('brake', 333);
 fill(344, 345, 0, STAND, 'X'); // 금 간 벽
+coinRow(340, 342);
 fill(350, 352, 12, 12, '-'); // 한 방향 발판 계단(짧게: 끝에서 걸어 내려온다)
+coinRow(350, 352, 11);
 fill(355, 357, 9, 9, '-');
 letter('K', 356, 8, 'none'); // K: 골목에서 가장 높은 발판
 add('door', 362, 12, {}, 2 * T, 4 * T); // 회사 문

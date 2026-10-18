@@ -63,6 +63,7 @@ describe('F08 Tiled 맵 로더', () => {
         o('letter', 30, 0, { char: 'B', ability: 'climb' }),
         { ...o('door', 30, 0), width: 10, height: 20 },
         { ...o('ability-gap', 10, 10), width: 20 },
+        o('coin', 12, 3),
       ]),
       COMMUTE_VERBS,
     );
@@ -76,11 +77,12 @@ describe('F08 Tiled 맵 로더', () => {
     expect(lv.letters).toEqual([{ char: 'B', x: 30, y: 0, ability: 'climb' }]);
     expect(lv.door).toEqual({ x: 30, y: 0, w: 10, h: 20 });
     expect(lv.abilityGaps).toEqual([[1, 2]]);
+    expect(lv.coins).toEqual([{ x: 10, y: 0 }]);
   });
 
   it.each([
     ['spawn이 없으면', map([]), /spawn/],
-    ['모르는 오브젝트 type', map([o('spawn', 0, 0), o('coin', 0, 0)]), /알 수 없는 오브젝트/],
+    ['모르는 오브젝트 type', map([o('spawn', 0, 0), o('gem', 0, 0)]), /알 수 없는 오브젝트/],
     ['동사 데이터에 없는 적', map([o('spawn', 0, 0), o('enemy', 0, 0, { verb: 'jump' })]), /verb/],
     [
       '외부 타일셋',

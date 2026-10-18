@@ -88,6 +88,15 @@ describe('F08·F29 레벨 점검 — 하나라도 실패하면 CI 실패', () =>
     expect(findUnreachableLetters(level.map, T, letters).map((l) => l.char)).toEqual([]);
   });
 
+  it('코인은 모두 닿을 수 있다(능력 쓰는 경로 포함)', () => {
+    const coins = level.coins ?? [];
+    expect(coins.length).toBeGreaterThanOrEqual(30);
+    const missed = coins.filter(
+      (c) => !canReachLetter(level.map, T, { char: '·', ...c }, { useFloat: true }),
+    );
+    expect(missed).toEqual([]);
+  });
+
   it('R은 float 없이는 닿을 수 없다(그 구간의 기술을 써야 닿는 곳)', () => {
     const r = letters.find((l) => l.char === 'R');
     expect(r).toBeDefined();

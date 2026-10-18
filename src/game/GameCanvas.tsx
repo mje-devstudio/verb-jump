@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { DEFAULT_TUNING, STEP_S, VIEW_H, VIEW_W } from '../shared/rules/tuning';
 import { speak } from '../shared/lib/tts';
 import { KeyboardControls } from './input';
@@ -7,7 +7,8 @@ import { parseTiledMap } from './level/tiled';
 import { FixedStepLoop, LoopDriver, pauseOnHidden } from './loop';
 import { GrayboxRenderer } from './render/grayboxRenderer';
 import type { GameStore } from './store';
-import { createWorld, drainEvents, stepWorld, type World } from './world';
+import { syncHud } from './hudSync';
+import { createWorld, stepWorld } from './world';
 
 type RunState = 'loading' | 'running' | 'hidden' | 'resuming' | 'error';
 
@@ -23,31 +24,22 @@ function integerScale(w: number, h: number): number {
   return Math.max(1, Math.floor(Math.min(w / VIEW_W, h / VIEW_H)));
 }
 
-/** 게임 알림을 React 저장소·TTS로 옮긴다. 프레임마다가 아니라 알림이 있을 때만 저장소가 바뀐다. */
-function forwardEvents(world: World, store: GameStore, nextCardId: () => number): void {
-  for (const e of drainEvents(world)) {
-    if (e.type === 'verb_gained') {
-      const entry = world.level.verbs[e.verb];
-      if (!entry) continue;
-      store.update({
-        verb: e.verb,
-        meaning: entry.meaning,
-        card: { id: nextCardId(), verb: e.verb, entry, correct: e.correct },
-      });
-      speak(e.verb);
-    } else if (e.type === 'ability_lost') {
-      store.update({ verb: null, meaning: null });
-    } else if (e.type === 'stage_clear') {
-      store.update({ cleared: true });
-    }
-  }
+/** React → 게임 루프로 내려가는 명령. 시작·일시정지 같은 명령만 내려가고 값은 저장소로 올라온다. */
+export interface GameController {
+  togglePause(): void;
 }
 
 /**
  * PixiJS 화면과 게임 루프를 붙이는 경계 컴포넌트.
  * 프레임마다 바뀌는 값은 React 상태에 두지 않는다. React는 화면 상태(로딩·일시정지)만 안다.
  */
-export function GameCanvas({ store }: { store: GameStore }) {
+export function GameCanvas({
+  store,
+  controllerRef,
+}: {
+  store: GameStore;
+  controllerRef?: RefObject<GameController | null>;
+}) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [runState, setRunState] = useState<RunState>('loading');
 
@@ -74,9 +66,19 @@ export function GameCanvas({ store }: { store: GameStore }) {
           stepWorld(world, controls.sample(), DEFAULT_TUNING, STEP_S),
         );
         const driver = new LoopDriver(loop, (alpha) => {
-          forwardEvents(world, store, () => ++cardId);
+          syncHud(world, store, { nextCardId: () => ++cardId, onVerbGained: speak });
           renderer.render(world, alpha, reducedMotion.matches);
         });
+        const togglePause = () => {
+          if (world.cleared) return;
+          driver.setPaused(!driver.isPaused);
+          store.update({ paused: driver.isPaused });
+        };
+        if (controllerRef) controllerRef.current = { togglePause };
+        const onKey = (e: KeyboardEvent) => {
+          if (e.code === 'Escape' && !e.repeat) togglePause();
+        };
+        window.addEventListener('keydown', onKey);
 
         host.appendChild(renderer.canvas);
         const fit = () => {
@@ -94,6 +96,8 @@ export function GameCanvas({ store }: { store: GameStore }) {
         setRunState('running');
 
         cleanup = () => {
+          window.removeEventListener('keydown', onKey);
+          if (controllerRef) controllerRef.current = null;
           driver.stop();
           stopVisibility();
           resizeObserver.disconnect();
@@ -116,12 +120,15 @@ export function GameCanvas({ store }: { store: GameStore }) {
       disposed = true;
       cleanup?.();
     };
-  }, [store]);
+  }, [store, controllerRef]);
 
   return (
-    <div className="game-host" ref={hostRef}>
+    <div
+      className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden"
+      ref={hostRef}
+    >
       {runState !== 'running' && (
-        <p className="game-status" role="status">
+        <p className="absolute rounded bg-black/70 px-3 py-1.5" role="status">
           {runState === 'loading' && '불러오는 중…'}
           {runState === 'hidden' && '일시정지'}
           {runState === 'resuming' && '3초 뒤 다시 시작해요'}

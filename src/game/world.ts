@@ -20,13 +20,29 @@ import {
   STOMP_BOUNCE,
 } from '../shared/rules/abilities';
 import { judgeContact, overlaps, type Box } from '../shared/rules/stomp';
+import { LIVES_START } from '../shared/rules/game';
+import { applyFall, applyHit, gainLife, type HitResult } from '../shared/rules/life';
+import { collectLetter, isWordComplete } from '../shared/rules/letters';
+import { clockMs } from '../shared/rules/clock';
+import {
+  canPickUp,
+  COIN_SIZE,
+  isExpired,
+  spillCoins,
+  stepSpilledCoin,
+  type SpilledCoin,
+} from './entities/spilledCoin';
 import { TILE, VIEW_W, type Tuning } from '../shared/rules/tuning';
 
 /** 게임 루프 → 바깥(HUD·TTS·학습 이벤트)으로 나가는 알림. 프레임마다가 아니라 일이 생길 때만. */
 export type WorldEvent =
   | { type: 'verb_gained'; verb: string; ability: AbilityId; correct: boolean }
-  | { type: 'hurt' }
+  | { type: 'hurt'; spilled: number; lifeLost: boolean }
   | { type: 'fell' }
+  | { type: 'game_over' }
+  | { type: 'coin' }
+  | { type: 'letter_collected'; char: string }
+  | { type: 'word_completed'; word: string }
   | { type: 'checkpoint'; index: number }
   | { type: 'ability_lost'; reason: 'checkpoint' }
   | { type: 'stage_clear' }
@@ -56,6 +72,10 @@ export interface LevelDef {
   /** 닿으면 클리어하는 회사 문. */
   door?: Box;
   letters?: readonly LetterSpawn[];
+  /** 코인 자리(칸 왼쪽 위). 권장 점프 경로를 따라 길잡이로 둔다. */
+  coins?: readonly Point[];
+  /** 철자 코인으로 모을 단어(스테이지 API의 spellWord). 없으면 철자 코인을 x 순서로 이은 단어. */
+  spellWord?: string;
   /** float처럼 능력이 있어야 건너는 틈의 열 범위(레벨 점검이 의도된 틈으로 본다). */
   abilityGaps?: readonly (readonly [number, number])[];
 }
@@ -83,6 +103,21 @@ export interface World {
   falls: number;
   /** 회사 문에 닿았는가. 클리어 뒤에는 세계가 멈춘다. */
   cleared: boolean;
+  /** 클리어 순간의 시계(하루 기준 ms). */
+  clearClock: number | null;
+  /** 게임이 실제로 진행된 시간(일시정지 제외, ms). 시계 = 8:57 + elapsedMs + clockPenaltyMs. */
+  elapsedMs: number;
+  coins: number;
+  lives: number;
+  /** 맵 코인을 먹었는가(코인 자리 순번). 다시 시작해도 돌아오지 않는다. */
+  readonly coinTaken: boolean[];
+  readonly spilled: SpilledCoin[];
+  readonly spellWord: string;
+  /** 철자 코인 자리마다 단어의 몇 번째 글자인지. */
+  readonly letterSlot: readonly number[];
+  readonly letterTaken: boolean[];
+  /** 단어 글자마다 모았는가. 맞아도 흘리지 않는다. */
+  letterGot: boolean[];
   /** 이번 프레임까지 쌓인 알림. 소비하는 쪽이 drainEvents로 비운다. */
   readonly events: WorldEvent[];
 }
@@ -98,6 +133,14 @@ function cloneMap(map: TileMap): TileMap {
 
 export function createWorld(level: LevelDef): World {
   const player = createPlayer(level.spawn);
+  const letters = level.letters ?? [];
+  const spellWord =
+    level.spellWord ??
+    [...letters]
+      .sort((a, b) => a.x - b.x)
+      .map((l) => l.char)
+      .join('');
+  const letterSlot = slotLetters(spellWord, letters);
   return {
     level,
     map: cloneMap(level.map),
@@ -114,8 +157,45 @@ export function createWorld(level: LevelDef): World {
     checkpoint: 0,
     falls: 0,
     cleared: false,
+    clearClock: null,
+    elapsedMs: 0,
+    coins: 0,
+    lives: LIVES_START,
+    coinTaken: (level.coins ?? []).map(() => false),
+    spilled: [],
+    spellWord,
+    letterSlot,
+    letterTaken: letters.map(() => false),
+    letterGot: [...spellWord].map(() => false),
     events: [],
   };
+}
+
+/** 철자 코인 자리를 단어 글자에 하나씩 짝짓는다(같은 글자가 여럿이면 앞에서부터). */
+function slotLetters(word: string, letters: readonly LetterSpawn[]): number[] {
+  const used = new Set<number>();
+  return letters.map((l) => {
+    for (let i = 0; i < word.length; i++) {
+      if (word[i] === l.char && !used.has(i)) {
+        used.add(i);
+        return i;
+      }
+    }
+    return -1;
+  });
+}
+
+export const coinBox = (p: Point): Box => ({
+  x: p.x + (TILE - COIN_SIZE) / 2,
+  y: p.y + (TILE - COIN_SIZE) / 2,
+  w: COIN_SIZE,
+  h: COIN_SIZE,
+});
+const letterBox = (l: LetterSpawn): Box => ({ x: l.x, y: l.y, w: TILE, h: TILE });
+
+/** 지금 시계(하루 기준 ms). */
+export function worldClock(w: World): number {
+  return w.clearClock ?? clockMs(w.elapsedMs, w.clockPenaltyMs);
 }
 
 export function drainEvents(w: World): WorldEvent[] {
@@ -176,8 +256,19 @@ function respawnAtCheckpoint(w: World): void {
   w.prev.y = w.player.y;
   w.invincibleMs = 0;
   w.hurtStunMs = 0;
-  // PRD: 동사 적은 같은 자리에 다시 생긴다. 능력·코인·생명 처리는 F26에서 붙인다.
+  w.spilled.length = 0;
+  // PRD: 동사 적은 같은 자리에 다시 생긴다.
   for (const e of w.enemies) resetEnemy(e);
+}
+
+/** 피격·추락 결과를 반영한다. 생명이 0이면 체크포인트에서 생명 3개·코인 0개로(시계·철자는 그대로). */
+function applyLife(w: World, r: HitResult): void {
+  w.coins = r.coins;
+  w.lives = r.lives;
+  if (r.gameOver) {
+    w.events.push({ type: 'game_over' });
+    respawnAtCheckpoint(w);
+  }
 }
 
 export function stepWorld(
@@ -188,6 +279,7 @@ export function stepWorld(
   opts: WorldOptions = {},
 ): void {
   if (w.cleared) return;
+  w.elapsedMs += dt * 1000;
   w.prev.x = w.player.x;
   w.prev.y = w.player.y;
   const ctx = abilityContext(w, input, tuning, dt);
@@ -239,11 +331,51 @@ export function stepWorld(
       w.player.vy = -HURT_KNOCKBACK_VY;
       // 적도 돌아선다: 벽에 몰린 주인공 밑으로 계속 걸어 들어와 밟히는 일을 막는다(이슈 003).
       e.dir = away > 0 ? -1 : 1;
-      w.events.push({ type: 'hurt' }); // 코인 흘리기·생명은 F26
+      // F26: 코인이 있으면 최대 10개를 흘리고 생명은 그대로, 없으면 생명 -1
+      const r = applyHit(w);
+      w.events.push({ type: 'hurt', spilled: r.spilled, lifeLost: r.spilled === 0 });
+      if (r.spilled > 0) {
+        const p = w.player;
+        w.spilled.push(...spillCoins(p.x + p.w / 2, p.y + p.h / 2, r.spilled));
+      }
+      applyLife(w, r);
     }
   }
 
-  // 4) 체크포인트와 구멍
+  // 4) 코인·흘린 코인·철자 코인 줍기
+  const coins = w.level.coins ?? [];
+  coins.forEach((c, i) => {
+    if (!w.coinTaken[i] && overlaps(w.player, coinBox(c))) {
+      w.coinTaken[i] = true;
+      w.coins++;
+      w.events.push({ type: 'coin' });
+    }
+  });
+  for (let i = w.spilled.length - 1; i >= 0; i--) {
+    const c = w.spilled[i];
+    if (!c) continue;
+    stepSpilledCoin(c, w.map, dt);
+    if (canPickUp(c) && overlaps(w.player, c)) {
+      w.coins++;
+      w.spilled.splice(i, 1);
+      w.events.push({ type: 'coin' });
+    } else if (isExpired(c)) {
+      w.spilled.splice(i, 1);
+    }
+  }
+  (w.level.letters ?? []).forEach((l, i) => {
+    if (w.letterTaken[i] || !overlaps(w.player, letterBox(l))) return;
+    w.letterTaken[i] = true;
+    const wasComplete = isWordComplete(w.spellWord, w.letterGot);
+    w.letterGot = collectLetter(w.spellWord, w.letterGot, w.letterSlot[i] ?? -1);
+    w.events.push({ type: 'letter_collected', char: l.char });
+    if (!wasComplete && isWordComplete(w.spellWord, w.letterGot)) {
+      w.lives = gainLife(w.lives);
+      w.events.push({ type: 'word_completed', word: w.spellWord });
+    }
+  });
+
+  // 5) 체크포인트·문·구멍
   const next = w.level.checkpoints[w.checkpoint + 1];
   if (next !== undefined && w.player.x >= next.x) {
     w.checkpoint++;
@@ -257,12 +389,16 @@ export function stepWorld(
   }
   if (w.level.door && overlaps(w.player, w.level.door)) {
     w.cleared = true;
+    w.clearClock = clockMs(w.elapsedMs, w.clockPenaltyMs);
     w.events.push({ type: 'stage_clear' });
     return;
   }
   if (w.player.y > mapHeightPx(w.map) + 2 * TILE) {
     w.falls++;
     w.events.push({ type: 'fell' });
+    const r = applyFall(w);
     respawnAtCheckpoint(w);
+    applyLife(w, { ...r, gameOver: false });
+    if (r.gameOver) w.events.push({ type: 'game_over' });
   }
 }

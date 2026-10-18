@@ -20,14 +20,19 @@ export function WordCard({ store }: { store: GameStore }) {
   if (!card || hiddenId === card.id) return null;
   const { verb, entry, correct } = card;
   return (
-    <div className={`word-card ${correct ? 'is-correct' : 'is-joke'}`} role="status">
-      <p className="word-card__verb">
-        {verb} <span className="word-card__phonetic">{entry.phonetic}</span>
+    <div
+      role="status"
+      className={`pointer-events-none absolute left-1/2 top-3 min-w-56 -translate-x-1/2 rounded-md border-2 bg-panel/90 px-4 py-2.5 text-center ${
+        correct ? 'border-accent' : 'border-dashed border-joke'
+      }`}
+    >
+      <p className="text-2xl font-bold">
+        {verb} <span className="text-sm font-normal text-muted">{entry.phonetic}</span>
       </p>
-      <p className="word-card__meaning">{entry.meaning}</p>
-      <p className="word-card__example">{entry.example}</p>
+      <p>{entry.meaning}</p>
+      <p className="text-sm italic text-slate-300">{entry.example}</p>
       {entry.confusedWith && (
-        <p className="word-card__note">{entry.confusedWith}와(과) 발음이 같아요</p>
+        <p className="text-[13px] text-amber-400">{entry.confusedWith}와(과) 발음이 같아요</p>
       )}
     </div>
   );

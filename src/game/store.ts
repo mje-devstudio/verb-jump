@@ -1,14 +1,31 @@
 import type { VerbEntry } from './data/verbs';
 
-/** 게임 → React로 올라가는 값. 사람이 읽는 값만 담고, 바뀔 때만 새 객체가 된다. */
+/** 클리어 순간 결과 요약(결과 화면 F11 전까지 배너에 쓴다). */
+export interface ClearSummary {
+  clock: string;
+  onTime: boolean;
+  score: number;
+}
+
+/**
+ * 게임 → React로 올라가는 값(F09). 사람이 읽는 값만 담는다.
+ * 모든 필드가 원시값이거나 바뀔 때만 새로 만드는 객체라, 같은 값이면 스냅숏도 같은 객체다.
+ */
 export interface GameSnapshot {
   verb: string | null;
   /** 지금 동사의 뜻(HUD 표시용). */
   meaning: string | null;
-  /** 동사를 얻은 순간 띄우는 단어 카드. id가 바뀌면 새 카드. */
+  /** 동사를 얻은 순간(또는 철자를 완성한 순간) 띄우는 단어 카드. id가 바뀌면 새 카드. */
   card: { id: number; verb: string; entry: VerbEntry; correct: boolean } | null;
-  /** 회사 문에 닿았는가(결과 화면 F11 전까지는 간단한 표시만). */
-  cleared: boolean;
+  lives: number;
+  coins: number;
+  /** "B _ E _ K" */
+  spell: string;
+  /** "8:58:07" — 초가 바뀔 때만 바뀐다. */
+  clock: string;
+  late: boolean;
+  paused: boolean;
+  cleared: ClearSummary | null;
 }
 
 export interface GameStore {
@@ -22,7 +39,13 @@ export const INITIAL_SNAPSHOT: GameSnapshot = Object.freeze({
   verb: null,
   meaning: null,
   card: null,
-  cleared: false,
+  lives: 3,
+  coins: 0,
+  spell: '',
+  clock: '8:57:00',
+  late: false,
+  paused: false,
+  cleared: null,
 });
 
 export function createGameStore(initial: GameSnapshot = INITIAL_SNAPSHOT): GameStore {

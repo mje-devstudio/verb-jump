@@ -2,7 +2,8 @@ import { Application, Container, Graphics, Text } from 'pixi.js';
 import { mapWidthPx, Tile, type TileMap } from '../level/tilemap';
 import { TILE, VIEW_H, VIEW_W } from '../../shared/rules/tuning';
 import type { AbilityPose } from '../abilities/types';
-import type { World } from '../world';
+import { coinBox, type World } from '../world';
+import { SPILL_MAX } from '../../shared/rules/game';
 
 const COLORS = {
   sky: 0x1f2430,
@@ -26,6 +27,11 @@ export class GrayboxRenderer {
   private readonly player = new Graphics();
   private readonly labels = new Map<object, Text>();
   private readonly enemyGraphics = new Map<object, Graphics>();
+  /** 맵 코인·철자 코인. 주우면 숨긴다. */
+  private coinSprites: Graphics[] = [];
+  private letterSprites: Container[] = [];
+  /** 흘린 코인은 동시에 최대 SPILL_MAX개라 미리 만들어 재사용한다(매 피격마다 생성하지 않음). */
+  private readonly spillPool: Graphics[] = [];
   private mapVersion = -1;
   private propsDrawn = false;
   private frame = 0;
@@ -143,8 +149,16 @@ export class GrayboxRenderer {
       g.rect(c.x + 3, c.y - 6, 5, 4).fill(COLORS.flag);
     }
     this.level.addChildAt(g, 1);
-    for (const l of letters) {
-      const coin = new Graphics().circle(l.x + 5, l.y + 5, 5).fill(COLORS.label);
+    this.coinSprites = (world.level.coins ?? []).map((c) => {
+      const b = coinBox(c);
+      const s = new Graphics().rect(b.x, b.y, b.w, b.h).fill(COLORS.label);
+      s.rect(b.x + 2, b.y + 1, 1, b.h - 2).fill(COLORS.cracked);
+      this.level.addChildAt(s, 2);
+      return s;
+    });
+    this.letterSprites = letters.map((l) => {
+      const box = new Container();
+      box.addChild(new Graphics().circle(l.x + 5, l.y + 5, 5).fill(COLORS.label));
       const t = new Text({
         text: l.char,
         style: { fontFamily: 'monospace', fontSize: 8, fontWeight: 'bold', fill: COLORS.eye },
@@ -152,8 +166,15 @@ export class GrayboxRenderer {
       });
       t.anchor.set(0.5);
       t.position.set(l.x + 5, l.y + 5);
-      this.level.addChildAt(coin, 2);
-      this.level.addChildAt(t, 3);
+      box.addChild(t);
+      this.level.addChildAt(box, 2);
+      return box;
+    });
+    for (let i = 0; i < SPILL_MAX; i++) {
+      const s = new Graphics().rect(0, 0, 6, 6).fill(COLORS.label);
+      s.visible = false;
+      this.level.addChild(s);
+      this.spillPool.push(s);
     }
   }
 
@@ -168,6 +189,13 @@ export class GrayboxRenderer {
       this.drawProps(world);
       this.propsDrawn = true;
     }
+    this.coinSprites.forEach((s, i) => (s.visible = !world.coinTaken[i]));
+    this.letterSprites.forEach((s, i) => (s.visible = !world.letterTaken[i]));
+    this.spillPool.forEach((s, i) => {
+      const c = world.spilled[i];
+      s.visible = c !== undefined && (Math.floor(this.frame / 3) % 2 === 0 || c.ageMs < 1500);
+      if (c) s.position.set(Math.round(c.x), Math.round(c.y));
+    });
 
     const p = world.player;
     const x = world.prev.x + (p.x - world.prev.x) * alpha;

@@ -11,7 +11,7 @@ import { TILE } from '../../shared/rules/tuning';
  * 맵 규칙 (docs/level-format.md)
  * - 타일 10×10px, 타일 레이어 `tiles` 하나. 타일셋 타일의 `kind` 속성: solid · oneway · cracked
  * - 오브젝트 레이어 `objects`. 오브젝트 type(Tiled의 Class):
- *   spawn · checkpoint(resetAbility) · enemy(verb) · letter(char, ability) · door · ability-gap
+ *   spawn · checkpoint(resetAbility) · coin · enemy(verb) · letter(char, ability) · door · ability-gap
  *   위치는 오브젝트 사각형의 왼쪽 위가 든 칸으로 정한다(door·ability-gap은 사각형 전체).
  */
 
@@ -124,6 +124,7 @@ export function parseTiledMap(raw: Json, verbs: Readonly<Record<string, VerbEntr
   const checkpoints: Checkpoint[] = [];
   const enemies: EnemySpawn[] = [];
   const letters: LetterSpawn[] = [];
+  const coins: Point[] = [];
   const abilityGaps: [number, number][] = [];
   let door: Box | undefined;
 
@@ -169,6 +170,9 @@ export function parseTiledMap(raw: Json, verbs: Readonly<Record<string, VerbEntr
         letters.push({ char, x: cell.x, y: cell.y, ability });
         break;
       }
+      case 'coin':
+        coins.push(cell);
+        break;
       case 'door':
         door = { x, y, w, h };
         break;
@@ -190,6 +194,7 @@ export function parseTiledMap(raw: Json, verbs: Readonly<Record<string, VerbEntr
     enemies,
     verbs,
     letters,
+    coins,
     abilityGaps,
   };
   return door ? { ...base, door } : base;
