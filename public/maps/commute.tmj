@@ -11,7 +11,7 @@
  "tilewidth": 10,
  "tileheight": 10,
  "nextlayerid": 3,
- "nextobjectid": 29,
+ "nextobjectid": 32,
  "properties": [
   {
    "name": "note",
@@ -6734,6 +6734,24 @@
     },
     {
      "id": 3,
+     "name": "checkpoint",
+     "type": "checkpoint",
+     "x": 270,
+     "y": 150,
+     "width": 10,
+     "height": 10,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "resetAbility",
+       "type": "string",
+       "value": "true"
+      }
+     ]
+    },
+    {
+     "id": 4,
      "name": "climb",
      "type": "enemy",
      "x": 320,
@@ -6751,7 +6769,7 @@
      ]
     },
     {
-     "id": 4,
+     "id": 5,
      "name": "sleep",
      "type": "enemy",
      "x": 380,
@@ -6769,7 +6787,7 @@
      ]
     },
     {
-     "id": 5,
+     "id": 6,
      "name": "B",
      "type": "letter",
      "x": 510,
@@ -6792,7 +6810,7 @@
      ]
     },
     {
-     "id": 6,
+     "id": 7,
      "name": "checkpoint",
      "type": "checkpoint",
      "x": 920,
@@ -6803,7 +6821,7 @@
      "visible": true
     },
     {
-     "id": 7,
+     "id": 8,
      "name": "float",
      "type": "enemy",
      "x": 980,
@@ -6821,7 +6839,25 @@
      ]
     },
     {
-     "id": 8,
+     "id": 9,
+     "name": "checkpoint",
+     "type": "checkpoint",
+     "x": 1160,
+     "y": 150,
+     "width": 10,
+     "height": 10,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "resetAbility",
+       "type": "string",
+       "value": "true"
+      }
+     ]
+    },
+    {
+     "id": 10,
      "name": "float",
      "type": "enemy",
      "x": 1220,
@@ -6839,7 +6875,7 @@
      ]
     },
     {
-     "id": 9,
+     "id": 11,
      "name": "dance",
      "type": "enemy",
      "x": 1280,
@@ -6857,7 +6893,7 @@
      ]
     },
     {
-     "id": 10,
+     "id": 12,
      "name": "R",
      "type": "letter",
      "x": 1440,
@@ -6880,7 +6916,7 @@
      ]
     },
     {
-     "id": 11,
+     "id": 13,
      "name": "checkpoint",
      "type": "checkpoint",
      "x": 1820,
@@ -6891,7 +6927,7 @@
      "visible": true
     },
     {
-     "id": 12,
+     "id": 14,
      "name": "break",
      "type": "enemy",
      "x": 1880,
@@ -6909,7 +6945,7 @@
      ]
     },
     {
-     "id": 13,
+     "id": 15,
      "name": "E",
      "type": "letter",
      "x": 2030,
@@ -6932,7 +6968,25 @@
      ]
     },
     {
-     "id": 14,
+     "id": 16,
+     "name": "checkpoint",
+     "type": "checkpoint",
+     "x": 2060,
+     "y": 150,
+     "width": 10,
+     "height": 10,
+     "rotation": 0,
+     "visible": true,
+     "properties": [
+      {
+       "name": "resetAbility",
+       "type": "string",
+       "value": "true"
+      }
+     ]
+    },
+    {
+     "id": 17,
      "name": "break",
      "type": "enemy",
      "x": 2100,
@@ -6950,7 +7004,7 @@
      ]
     },
     {
-     "id": 15,
+     "id": 18,
      "name": "brake",
      "type": "enemy",
      "x": 2160,
@@ -6968,7 +7022,7 @@
      ]
     },
     {
-     "id": 16,
+     "id": 19,
      "name": "A",
      "type": "letter",
      "x": 2370,
@@ -6991,7 +7045,7 @@
      ]
     },
     {
-     "id": 17,
+     "id": 20,
      "name": "checkpoint",
      "type": "checkpoint",
      "x": 2720,
@@ -7002,7 +7056,7 @@
      "visible": true
     },
     {
-     "id": 18,
+     "id": 21,
      "name": "climb",
      "type": "enemy",
      "x": 2780,
@@ -7020,7 +7074,7 @@
      ]
     },
     {
-     "id": 19,
+     "id": 22,
      "name": "sleep",
      "type": "enemy",
      "x": 2830,
@@ -7038,7 +7092,7 @@
      ]
     },
     {
-     "id": 20,
+     "id": 23,
      "name": "float",
      "type": "enemy",
      "x": 3000,
@@ -7056,7 +7110,7 @@
      ]
     },
     {
-     "id": 21,
+     "id": 24,
      "name": "dance",
      "type": "enemy",
      "x": 3050,
@@ -7074,7 +7128,7 @@
      ]
     },
     {
-     "id": 22,
+     "id": 25,
      "name": "break",
      "type": "enemy",
      "x": 3280,
@@ -7092,7 +7146,7 @@
      ]
     },
     {
-     "id": 23,
+     "id": 26,
      "name": "brake",
      "type": "enemy",
      "x": 3330,
@@ -7110,7 +7164,7 @@
      ]
     },
     {
-     "id": 24,
+     "id": 27,
      "name": "K",
      "type": "letter",
      "x": 3560,
@@ -7133,7 +7187,7 @@
      ]
     },
     {
-     "id": 25,
+     "id": 28,
      "name": "door",
      "type": "door",
      "x": 3620,
@@ -7144,7 +7198,7 @@
      "visible": true
     },
     {
-     "id": 26,
+     "id": 29,
      "name": "ability-gap",
      "type": "ability-gap",
      "x": 1080,
@@ -7155,7 +7209,7 @@
      "visible": true
     },
     {
-     "id": 27,
+     "id": 30,
      "name": "ability-gap",
      "type": "ability-gap",
      "x": 1380,
@@ -7166,7 +7220,7 @@
      "visible": true
     },
     {
-     "id": 28,
+     "id": 31,
      "name": "ability-gap",
      "type": "ability-gap",
      "x": 3120,

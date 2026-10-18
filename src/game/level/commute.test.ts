@@ -17,9 +17,24 @@ const gaps = level.abilityGaps ?? [];
 const letters = level.letters ?? [];
 
 describe('F08 1스테이지 맵(commute.tmj) 구성', () => {
-  it('시작 위치와 구간마다 체크포인트가 있다(구간 1~4)', () => {
-    expect(level.checkpoints).toHaveLength(4);
+  it('시작 위치, 구간마다 체크포인트(구간 1~4), 구간 1~3 고르기 앞 체크포인트가 있다', () => {
+    expect(level.checkpoints).toHaveLength(7);
     expect(level.checkpoints[0]).toEqual(level.spawn);
+    expect(level.checkpoints.filter((c) => c.resetAbility)).toHaveLength(3);
+  });
+
+  it('능력을 잃는 체크포인트 바로 뒤에는 맞는 동사와 오답 적이 함께 있다(고르기)', () => {
+    const PAIRS: Record<string, string> = { climb: 'sleep', float: 'dance', break: 'brake' };
+    for (const cp of level.checkpoints.filter((c) => c.resetAbility)) {
+      const after = level.enemies
+        .filter((e) => e.col * 10 > cp.x)
+        .sort((a, b) => a.col - b.col)
+        .slice(0, 2)
+        .map((e) => e.verb);
+      const right = after.find((v) => v in PAIRS);
+      expect(right).toBeDefined();
+      expect(after).toContain(PAIRS[right ?? '']);
+    }
   });
 
   it('철자 코인 다섯 개가 왼쪽부터 B R E A K 순서다', () => {

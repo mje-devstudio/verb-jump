@@ -1,6 +1,6 @@
 import type { VerbEntry } from '../data/verbs';
 import type { EnemySpawn } from '../entities/enemy';
-import type { LetterSpawn, LevelDef } from '../world';
+import type { Checkpoint, LetterSpawn, LevelDef } from '../world';
 import { Tile, type Point, type TileId } from './tilemap';
 import type { Box } from '../../shared/rules/stomp';
 import { TILE } from '../../shared/rules/tuning';
@@ -11,7 +11,7 @@ import { TILE } from '../../shared/rules/tuning';
  * 맵 규칙 (docs/level-format.md)
  * - 타일 10×10px, 타일 레이어 `tiles` 하나. 타일셋 타일의 `kind` 속성: solid · oneway · cracked
  * - 오브젝트 레이어 `objects`. 오브젝트 type(Tiled의 Class):
- *   spawn · checkpoint · enemy(verb) · letter(char, ability) · door · ability-gap
+ *   spawn · checkpoint(resetAbility) · enemy(verb) · letter(char, ability) · door · ability-gap
  *   위치는 오브젝트 사각형의 왼쪽 위가 든 칸으로 정한다(door·ability-gap은 사각형 전체).
  */
 
@@ -47,7 +47,10 @@ function prop(o: Record<string, Json>, name: string): string | null {
   if (o.properties === undefined) return null;
   for (const p of arr(o.properties, 'properties')) {
     const po = obj(p, 'property');
-    if (po.name === name) return str(po.value, `property ${name}`);
+    if (po.name !== name) continue;
+    // Tiled에서 bool 속성으로 넣어도 읽는다
+    if (typeof po.value === 'boolean') return String(po.value);
+    return str(po.value, `property ${name}`);
   }
   return null;
 }
@@ -118,7 +121,7 @@ export function parseTiledMap(raw: Json, verbs: Readonly<Record<string, VerbEntr
   });
 
   let spawn: Point | null = null;
-  const checkpoints: Point[] = [];
+  const checkpoints: Checkpoint[] = [];
   const enemies: EnemySpawn[] = [];
   const letters: LetterSpawn[] = [];
   const abilityGaps: [number, number][] = [];
@@ -140,7 +143,9 @@ export function parseTiledMap(raw: Json, verbs: Readonly<Record<string, VerbEntr
         spawn = cell;
         break;
       case 'checkpoint':
-        checkpoints.push(cell);
+        checkpoints.push(
+          prop(ob, 'resetAbility') === 'true' ? { ...cell, resetAbility: true } : cell,
+        );
         break;
       case 'enemy': {
         const verb = prop(ob, 'verb');

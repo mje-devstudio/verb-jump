@@ -28,8 +28,14 @@ export type WorldEvent =
   | { type: 'hurt' }
   | { type: 'fell' }
   | { type: 'checkpoint'; index: number }
+  | { type: 'ability_lost'; reason: 'checkpoint' }
   | { type: 'stage_clear' }
   | AbilityEvent;
+
+/** 체크포인트. resetAbility면 지나갈 때 능력을 잃는다(고르기 구간 앞: 소개에서 얻은 동사를 들고 지나가지 못하게). */
+export interface Checkpoint extends Point {
+  resetAbility?: boolean;
+}
 
 /** 철자 코인 자리(F27에서 줍기·HUD를 붙인다). */
 export interface LetterSpawn {
@@ -45,7 +51,7 @@ export interface LevelDef {
   spawn: Point;
   enemies: readonly EnemySpawn[];
   /** 체크포인트 자리(시작 위치와 같은 형식: 서 있는 칸의 왼쪽 위). 구간마다 하나(PRD). 0번은 시작 위치. */
-  checkpoints: readonly Point[];
+  checkpoints: readonly Checkpoint[];
   verbs: Readonly<Record<string, VerbEntry>>;
   /** 닿으면 클리어하는 회사 문. */
   door?: Box;
@@ -242,6 +248,12 @@ export function stepWorld(
   if (next !== undefined && w.player.x >= next.x) {
     w.checkpoint++;
     w.events.push({ type: 'checkpoint', index: w.checkpoint });
+    if (next.resetAbility && w.ability) {
+      w.ability.onLose(ctx);
+      w.ability = null;
+      w.verb = null;
+      w.events.push({ type: 'ability_lost', reason: 'checkpoint' });
+    }
   }
   if (w.level.door && overlaps(w.player, w.level.door)) {
     w.cleared = true;

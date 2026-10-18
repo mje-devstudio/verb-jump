@@ -35,6 +35,8 @@ function forwardEvents(world: World, store: GameStore, nextCardId: () => number)
         card: { id: nextCardId(), verb: e.verb, entry, correct: e.correct },
       });
       speak(e.verb);
+    } else if (e.type === 'ability_lost') {
+      store.update({ verb: null, meaning: null });
     } else if (e.type === 'stage_clear') {
       store.update({ cleared: true });
     }

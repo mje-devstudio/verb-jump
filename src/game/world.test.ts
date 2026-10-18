@@ -135,6 +135,24 @@ describe('F06 밟기와 동사 얻기', () => {
 });
 
 describe('F08 클리어와 적 재등장', () => {
+  it('고르기 앞 체크포인트를 지나면 능력을 잃고 알림이 나간다', () => {
+    const base = lvl([{ verb: 'climb', col: 4, row: 5 }]);
+    const w = createWorld({
+      ...base,
+      checkpoints: [base.spawn, { x: 8 * TILE, y: 5 * TILE, resetAbility: true }],
+    });
+    w.player.x = enemy(w).x + 1;
+    w.player.y = enemy(w).y - 30;
+    run(w, 30, {});
+    expect(w.verb).toBe('climb');
+    drainEvents(w);
+    run(w, 60, { right: true });
+    expect(w.checkpoint).toBe(1);
+    expect(w.verb).toBeNull();
+    expect(w.ability).toBeNull();
+    expect(drainEvents(w)).toContainEqual({ type: 'ability_lost', reason: 'checkpoint' });
+  });
+
   it('회사 문에 닿으면 클리어 알림이 한 번 나가고 세계가 멈춘다', () => {
     const base = lvl([]);
     const w = createWorld({ ...base, door: { x: 9 * TILE, y: 3 * TILE, w: 20, h: 30 } });

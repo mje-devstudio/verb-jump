@@ -34,6 +34,9 @@ fill(COLS - 1, COLS - 1, 0, STAND);
 add('spawn', 3, STAND);
 enemy('climb', 14); // 소개: 오답 없이 한 번
 fill(22, 23, 11, STAND); // 낮은 담장 5칸(점프 42.75px로는 못 넘음)
+// 고르기 앞 체크포인트: 지나가면 능력을 잃는다(소개에서 얻은 climb를 들고 지나가지 못하게)
+const choose = (col) => add('checkpoint', col, STAND, { resetAbility: 'true' });
+choose(27);
 enemy('climb', 32); // 고르기
 enemy('sleep', 38);
 fill(50, 52, 8, STAND); // 높은 담장 8칸
@@ -43,6 +46,7 @@ letter('B', 51, 7, 'climb'); // B: 높은 담장 위
 add('checkpoint', 92, STAND);
 enemy('float', 98); // 소개
 const g1 = gap(108, 113); // 짧은 틈 6칸(달려 뛰기 51px로는 못 건넘)
+choose(116);
 enemy('float', 122); // 고르기
 enemy('dance', 128);
 const g2 = gap(138, 151); // 넓은 틈 14칸
@@ -54,6 +58,7 @@ add('checkpoint', 182, STAND);
 enemy('break', 188); // 소개
 fill(198, 199, 0, STAND, 'X'); // 금 간 벽(천장까지)
 letter('E', 203, STAND, 'break'); // E: 금 간 벽 너머
+choose(206);
 enemy('break', 210); // 고르기: break와 brake가 함께
 enemy('brake', 216);
 fill(232, 233, 0, STAND, 'X');
