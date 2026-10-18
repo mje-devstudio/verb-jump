@@ -1,22 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_TUNING, STEP_S } from '../shared/rules/tuning';
-import { GRAYBOX_LEVEL } from './level/grayboxLevel';
-import { parseAsciiMap } from './level/tilemap';
+import { grayboxLevel } from './level/grayboxLevel';
+import { NO_CONTROLS } from './input';
 import { FixedStepLoop, LoopDriver, type FrameClock } from './loop';
-import { NO_INPUT } from './physics/player';
 import { createWorld, stepWorld } from './world';
 
 /** 스텝 번호로 정해지는 입력: 오른쪽으로 달리며 0.2초마다 점프. */
 const scripted = (i: number) => ({
-  ...NO_INPUT,
+  ...NO_CONTROLS,
   right: true,
   jumpPressed: i % 12 === 0,
   jumpHeld: i % 12 < 8,
 });
 
 function simulate(frameS: number, totalS: number) {
-  const { map, spawn } = parseAsciiMap(GRAYBOX_LEVEL);
-  const world = createWorld(map, spawn);
+  const world = createWorld(grayboxLevel());
   const loop = new FixedStepLoop((i) => stepWorld(world, scripted(i), DEFAULT_TUNING, STEP_S));
   const frames = Math.round(totalS / frameS);
   for (let f = 0; f < frames; f++) loop.advance(frameS);

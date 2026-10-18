@@ -6,6 +6,15 @@ export interface ControlSnapshot extends PlayerInput {
   verbPressed: boolean;
 }
 
+export const NO_CONTROLS: Readonly<ControlSnapshot> = Object.freeze({
+  left: false,
+  right: false,
+  jumpPressed: false,
+  jumpHeld: false,
+  verbHeld: false,
+  verbPressed: false,
+});
+
 const LEFT = new Set(['ArrowLeft']);
 const RIGHT = new Set(['ArrowRight']);
 const JUMP = new Set(['Space', 'KeyZ']);

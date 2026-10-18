@@ -1,0 +1,135 @@
+import { describe, expect, it } from 'vitest';
+import { HURT_INVINCIBLE_MS } from '../shared/rules/abilities';
+import { DEFAULT_TUNING as T, STEP_S, TILE } from '../shared/rules/tuning';
+import { COMMUTE_VERBS } from './data/verbs';
+import { NO_CONTROLS, type ControlSnapshot } from './input';
+import { parseAsciiMap } from './level/tilemap';
+import { createWorld, drainEvents, stepWorld, type LevelDef, type World } from './world';
+
+const LINES = [
+  '#                              #',
+  '#                              #',
+  '#                              #',
+  '#                              #',
+  '#                              #',
+  '#  P                           #',
+  '#############    ###############',
+];
+
+function lvl(enemies: LevelDef['enemies']): LevelDef {
+  const { map, spawn } = parseAsciiMap(LINES);
+  return { map, spawn, enemies, checkpoints: [spawn], verbs: COMMUTE_VERBS };
+}
+
+function enemy(w: World) {
+  const e = w.enemies[0];
+  if (!e) throw new Error('적이 없습니다');
+  return e;
+}
+
+function run(w: World, n: number, input: Partial<ControlSnapshot>) {
+  for (let i = 0; i < n; i++) stepWorld(w, { ...NO_CONTROLS, ...input }, T, STEP_S);
+}
+
+describe('F06 밟기와 동사 얻기', () => {
+  it('위에서 밟으면 적이 사라지고 동사 능력을 얻으며 알림이 나간다', () => {
+    const w = createWorld(lvl([{ verb: 'climb', col: 3, row: 5 }]));
+    // 적 바로 위에서 떨어뜨린다
+    w.player.x = enemy(w).x + 1;
+    w.player.y = enemy(w).y - 30;
+    run(w, 30, {});
+    expect(enemy(w).alive).toBe(false);
+    expect(w.verb).toBe('climb');
+    expect(w.ability?.id).toBe('climb');
+    expect(drainEvents(w)).toContainEqual({
+      type: 'verb_gained',
+      verb: 'climb',
+      ability: 'climb',
+      correct: true,
+    });
+  });
+
+  it('옆에 닿으면 피격: 1초 무적 동안은 다시 맞지 않는다', () => {
+    const w = createWorld(lvl([{ verb: 'sleep', col: 8, row: 5 }]));
+    run(w, 10, {});
+    let firstHurt = -1;
+    for (let i = 0; i < 120 && firstHurt < 0; i++) {
+      run(w, 1, { right: true });
+      if (drainEvents(w).some((e) => e.type === 'hurt')) firstHurt = i;
+    }
+    expect(firstHurt).toBeGreaterThanOrEqual(0);
+    expect(w.verb).toBeNull(); // 옆에서 닿으면 능력을 얻지 않는다
+    expect(w.invincibleMs).toBe(HURT_INVINCIBLE_MS);
+    // 무적 시간(1초 = 60스텝) 안에는 적이 다가와 닿아도 다시 맞지 않는다
+    let again = 0;
+    for (let i = 0; i < 59; i++) {
+      run(w, 1, {});
+      again += drainEvents(w).filter((e) => e.type === 'hurt').length;
+    }
+    expect(again).toBe(0);
+  });
+
+  it('옆에서 맞고 밀려난 뒤 다가오던 적 위로 떨어져 원치 않은 동사를 얻지 않는다(이슈 003)', () => {
+    const w = createWorld(lvl([{ verb: 'sleep', col: 9, row: 5 }]));
+    run(w, 10, {});
+    // 가만히 서 있는 주인공에게 적이 걸어와 옆에서 닿는다
+    w.player.x = enemy(w).x - w.player.w - 1;
+    const events: string[] = [];
+    for (let i = 0; i < 240; i++) {
+      run(w, 1, {});
+      for (const e of drainEvents(w)) events.push(e.type);
+    }
+    expect(events).toContain('hurt');
+    expect(events).not.toContain('verb_gained');
+    expect(w.verb).toBeNull();
+  });
+
+  it('맞으면 경직 동안 넉백 속도가 유지돼 실제로 밀려난다(이슈 003)', () => {
+    const w = createWorld(lvl([{ verb: 'sleep', col: 9, row: 5 }]));
+    run(w, 10, {});
+    w.player.x = enemy(w).x - w.player.w - 1;
+    let hurtX: number | null = null;
+    for (let i = 0; i < 60 && hurtX === null; i++) {
+      run(w, 1, {});
+      if (drainEvents(w).some((e) => e.type === 'hurt')) hurtX = w.player.x;
+    }
+    expect(hurtX).not.toBeNull();
+    run(w, 20, {});
+    expect((hurtX ?? 0) - w.player.x).toBeGreaterThan(15);
+  });
+
+  it('벽에 몰려 있어도 적이 돌아서서 밑으로 파고들지 않는다(이슈 003)', () => {
+    const w = createWorld(lvl([{ verb: 'sleep', col: 3, row: 5 }]));
+    w.player.x = 1 * TILE; // 왼쪽 벽에 붙어 있다
+    run(w, 10, {});
+    const events: string[] = [];
+    for (let i = 0; i < 300; i++) {
+      run(w, 1, {});
+      for (const e of drainEvents(w)) events.push(e.type);
+    }
+    expect(events).not.toContain('verb_gained');
+  });
+
+  it('구멍에 빠지면 체크포인트에서 다시 시작하고 동사 적이 같은 자리에 다시 생긴다', () => {
+    const w = createWorld(lvl([{ verb: 'float', col: 8, row: 5 }]));
+    w.player.x = enemy(w).x + 1;
+    w.player.y = enemy(w).y - 30;
+    run(w, 30, {});
+    expect(enemy(w).alive).toBe(false);
+    // 구멍(13~16열)으로 떨어뜨린다
+    w.player.x = 14 * TILE;
+    w.player.y = 5 * TILE;
+    for (let i = 0; i < 200 && w.falls === 0; i++) run(w, 1, {});
+    expect(w.falls).toBe(1);
+    expect(enemy(w).alive).toBe(true);
+    expect(w.player.x).toBe(w.level.spawn.x);
+  });
+
+  it('적은 발판 끝에서 돌아서 떨어지지 않는다', () => {
+    const w = createWorld(lvl([{ verb: 'dance', col: 11, row: 5 }]));
+    w.player.x = 25 * TILE; // 멀리 떨어뜨려 두기
+    run(w, 600, {});
+    expect(enemy(w).alive).toBe(true);
+    expect(enemy(w).x + enemy(w).w).toBeLessThanOrEqual(13 * TILE);
+  });
+});

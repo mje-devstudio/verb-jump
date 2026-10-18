@@ -1,4 +1,4 @@
-import { Tile, tileAt, type TileMap } from '../level/tilemap';
+import { isSolid, Tile, tileAt, type TileMap } from '../level/tilemap';
 import { TILE } from '../../shared/rules/tuning';
 
 /** 경계에 딱 붙은 상자가 옆 타일과 겹친 것으로 잡히지 않게 하는 여유. */
@@ -30,7 +30,7 @@ export function moveX(body: Body, map: TileMap, dx: number): -1 | 0 | 1 {
   if (dx > 0) {
     const c = lastCol(body.x, body.w);
     for (let r = r0; r <= r1; r++) {
-      if (tileAt(map, c, r) === Tile.Solid) {
+      if (isSolid(tileAt(map, c, r))) {
         body.x = c * TILE - body.w;
         body.vx = 0;
         return 1;
@@ -39,7 +39,7 @@ export function moveX(body: Body, map: TileMap, dx: number): -1 | 0 | 1 {
   } else {
     const c = firstCol(body.x);
     for (let r = r0; r <= r1; r++) {
-      if (tileAt(map, c, r) === Tile.Solid) {
+      if (isSolid(tileAt(map, c, r))) {
         body.x = (c + 1) * TILE;
         body.vx = 0;
         return -1;
@@ -65,7 +65,7 @@ export function moveY(body: Body, map: TileMap, dy: number): 'ground' | 'ceiling
     const top = r * TILE;
     for (let c = c0; c <= c1; c++) {
       const t = tileAt(map, c, r);
-      if (t === Tile.Solid || (t === Tile.OneWay && prevBottom <= top + EPS)) {
+      if (isSolid(t) || (t === Tile.OneWay && prevBottom <= top + EPS)) {
         body.y = top - body.h;
         body.vy = 0;
         return 'ground';
@@ -74,12 +74,30 @@ export function moveY(body: Body, map: TileMap, dy: number): 'ground' | 'ceiling
   } else {
     const r = firstRow(body.y);
     for (let c = c0; c <= c1; c++) {
-      if (tileAt(map, c, r) === Tile.Solid) {
+      if (isSolid(tileAt(map, c, r))) {
         body.y = (r + 1) * TILE;
         body.vy = 0;
         return 'ceiling';
       }
     }
+  }
+  return null;
+}
+
+/**
+ * dir 쪽 바로 옆 칸에 벽이 붙어 있으면 그 열 번호, 아니면 null. climb·break가 쓴다.
+ * reachPx: 몸과 벽 사이에 이만큼 틈이 있어도 붙은 것으로 본다.
+ */
+export function adjacentWallCol(
+  body: Body,
+  map: TileMap,
+  dir: -1 | 1,
+  reachPx = 0.5,
+): number | null {
+  const probeX = dir > 0 ? body.x + body.w + reachPx : body.x - reachPx;
+  const c = Math.floor((dir > 0 ? probeX - EPS : probeX) / TILE);
+  for (let r = firstRow(body.y); r <= lastRow(body.y, body.h); r++) {
+    if (isSolid(tileAt(map, c, r))) return c;
   }
   return null;
 }

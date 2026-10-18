@@ -52,3 +52,64 @@ body {
   color: var(--muted);
   font-size: 14px;
 }
+.hud-top {
+  padding: 8px 16px 0;
+}
+.verb-chip {
+  margin: 0;
+  font-size: 15px;
+}
+.verb-chip kbd {
+  margin-left: 4px;
+  padding: 0 4px;
+  border: 1px solid var(--muted);
+  border-radius: 3px;
+  font-size: 12px;
+}
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+.word-card {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 220px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  background: rgb(15 18 25 / 0.92);
+  border: 2px solid #facc15;
+  text-align: center;
+  pointer-events: none;
+}
+.word-card.is-joke {
+  border-style: dashed;
+  border-color: #f472b6;
+}
+.word-card p {
+  margin: 2px 0;
+}
+.word-card__verb {
+  font-size: 22px;
+  font-weight: 700;
+}
+.word-card__phonetic {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--muted);
+}
+.word-card__meaning {
+  font-size: 16px;
+}
+.word-card__example {
+  font-size: 14px;
+  color: #cbd5e1;
+  font-style: italic;
+}
+.word-card__note {
+  font-size: 13px;
+  color: #fbbf24;
+}

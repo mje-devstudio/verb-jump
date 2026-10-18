@@ -1,4 +1,4 @@
-import { mapHeightPx, Tile, tileAt, type TileMap } from './tilemap';
+import { isSolid, mapHeightPx, Tile, tileAt, type TileMap } from './tilemap';
 import { createPlayer, stepPlayer } from '../physics/player';
 import { STEP_S, TILE, type Tuning } from '../../shared/rules/tuning';
 
@@ -18,9 +18,9 @@ export interface EdgeJumpResult {
 
 const standable = (m: TileMap, c: number, r: number) => {
   const t = tileAt(m, c, r);
-  return t === Tile.Solid || t === Tile.OneWay;
+  return isSolid(t) || t === Tile.OneWay;
 };
-const solid = (m: TileMap, c: number, r: number) => tileAt(m, c, r) === Tile.Solid;
+const solid = (m: TileMap, c: number, r: number) => isSolid(tileAt(m, c, r));
 /** 위가 막히지 않아 설 수 있는 윗면. */
 const surface = (m: TileMap, c: number, r: number) =>
   standable(m, c, r) && !solid(m, c, r - 1) && !solid(m, c, r - 2);
@@ -90,10 +90,20 @@ export function simulateEdgeJump(
   return { ...edge, heightTiles, landX: null, distance: null, frames: null };
 }
 
-/** 모든 발판 끝에서 앞뒤로 달려 뛰어, 구멍에 빠지는 곳을 돌려준다. */
-export function findPitLandings(map: TileMap, tuning: Readonly<Tuning>): EdgeJumpResult[] {
+/**
+ * 모든 발판 끝에서 앞뒤로 달려 뛰어, 구멍에 빠지는 곳을 돌려준다.
+ * abilityGaps: float처럼 능력이 있어야 건너는 틈의 열 범위. 그 틈 바로 옆 끝에서 빠지는 것은 의도된 배치다.
+ */
+export function findPitLandings(
+  map: TileMap,
+  tuning: Readonly<Tuning>,
+  abilityGaps: readonly (readonly [number, number])[] = [],
+): EdgeJumpResult[] {
   const ground = groundRow(map);
+  const facesAbilityGap = (e: { col: number; dir: -1 | 1 }) =>
+    abilityGaps.some(([a, b]) => e.col + e.dir >= a && e.col + e.dir <= b);
   return findEdges(map)
+    .filter((e) => !facesAbilityGap(e))
     .map((e) => simulateEdgeJump(map, tuning, e, 4, ground))
     .filter((r) => r.landX === null);
 }

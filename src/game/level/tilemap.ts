@@ -6,8 +6,15 @@ export const Tile = {
   Solid: 1,
   /** 공중 발판 — 위에서 내려올 때만 밟힌다(F25). */
   OneWay: 2,
+  /** 금 간 벽 — 벽처럼 막지만 break 능력으로 부술 수 있다(F07). */
+  Cracked: 3,
 } as const;
 export type TileId = (typeof Tile)[keyof typeof Tile];
+
+/** 모든 방향에서 막는 타일인가(벽·금 간 벽). */
+export function isSolid(t: TileId): boolean {
+  return t === Tile.Solid || t === Tile.Cracked;
+}
 
 export interface TileMap {
   readonly cols: number;
@@ -45,7 +52,7 @@ export interface ParsedAsciiMap {
 
 /**
  * 회색 상자 단계용 ASCII 맵. Tiled 로더(F08)가 들어오면 테스트 픽스처 용도로만 남는다.
- *   '#' 벽·땅, '-' 한 방향 발판, 'P' 시작 위치, 그 밖은 빈칸.
+ *   '#' 벽·땅, '-' 한 방향 발판, 'X' 금 간 벽, 'P' 시작 위치, 그 밖은 빈칸.
  */
 export function parseAsciiMap(lines: readonly string[]): ParsedAsciiMap {
   const rows = lines.length;
@@ -57,6 +64,7 @@ export function parseAsciiMap(lines: readonly string[]): ParsedAsciiMap {
       const ch = line[c];
       if (ch === '#') tiles[r * cols + c] = Tile.Solid;
       else if (ch === '-') tiles[r * cols + c] = Tile.OneWay;
+      else if (ch === 'X') tiles[r * cols + c] = Tile.Cracked;
       else if (ch === 'P') spawn = { x: c * TILE, y: r * TILE };
     }
   });

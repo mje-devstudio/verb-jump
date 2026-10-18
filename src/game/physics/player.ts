@@ -19,6 +19,22 @@ export const NO_INPUT: Readonly<PlayerInput> = Object.freeze({
   jumpHeld: false,
 });
 
+/**
+ * 능력 모듈(F07)이 이번 스텝의 물리를 바꾸는 방법. 물리 코드는 지금 능력이 무엇인지 모른다.
+ */
+export interface StepMods {
+  /** 이동·점프 입력을 무시한다(sleep·dance). 중력과 감속은 그대로. */
+  frozen?: boolean;
+  /** 중력을 끄고 이 세로 속도로 움직인다(climb). */
+  holdVy?: number;
+  /** 최대 낙하 속도를 이 값으로 낮춘다(float). */
+  maxFall?: number;
+  /** 가로 속도를 가속·감속하지 않고 그대로 둔다(맞고 밀려나는 중). */
+  keepVx?: boolean;
+}
+
+export const NO_MODS: Readonly<StepMods> = Object.freeze({});
+
 export interface PlayerState extends Body {
   onGround: boolean;
   /** 마지막으로 땅에 있던 뒤 흐른 시간(ms). 땅 위면 0. 발판 끝 유예에 쓴다. */
@@ -69,8 +85,10 @@ export function stepPlayer(
   map: TileMap,
   t: Readonly<Tuning>,
   dt: number,
+  mods: Readonly<StepMods> = NO_MODS,
 ): void {
   const dtMs = dt * 1000;
+  if (mods.frozen) input = NO_INPUT;
 
   // 1) 좌우: 같은 방향으로 밀면 accel, 손을 떼거나 반대로 밀면 decel. 공중에서는 airControl 배율.
   const dir = (input.right ? 1 : 0) - (input.left ? 1 : 0);
@@ -78,7 +96,7 @@ export function stepPlayer(
   const control = p.onGround ? 1 : t.airControl;
   const speedingUp = dir !== 0 && (p.vx === 0 || Math.sign(p.vx) === dir);
   const rate = (speedingUp ? t.accel : t.decel) * control;
-  p.vx = approach(p.vx, dir * t.maxSpeed, rate * dt);
+  if (!mods.keepVx) p.vx = approach(p.vx, dir * t.maxSpeed, rate * dt);
 
   // 2) 점프: 누른 입력은 bufferMs 동안 남고, 땅을 떠난 뒤 coyoteMs 동안은 땅으로 친다.
   if (input.jumpPressed) p.bufferMs = t.bufferMs;
@@ -103,8 +121,13 @@ export function stepPlayer(
   // 4) 중력: 떨어질 때 fallMul 배로 무겁게, 최대 낙하 속도 제한.
   //    속도를 먼저 바꾸고 그 속도로 옮긴다(semi-implicit Euler) — 점프 손맛 실험실과 같은 방식.
   //    앞뒤 속도 평균으로 옮기면 공중에 1프레임 더 떠서 레벨 규칙 거리와 어긋난다(docs/issues/002).
-  const g = p.vy > 0 ? t.gravity * t.fallMul : t.gravity;
-  p.vy = Math.min(p.vy + g * dt, t.maxFall);
+  if (mods.holdVy !== undefined) {
+    p.vy = mods.holdVy;
+    p.rising = false;
+  } else {
+    const g = p.vy > 0 ? t.gravity * t.fallMul : t.gravity;
+    p.vy = Math.min(p.vy + g * dt, mods.maxFall ?? t.maxFall);
+  }
 
   // 5) 충돌: 축을 나눠 x 먼저, y 다음.
   p.wall = moveX(p, map, p.vx * dt);

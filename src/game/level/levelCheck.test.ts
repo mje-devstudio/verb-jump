@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_TUNING } from '../../shared/rules/tuning';
-import { GRAYBOX_LEVEL } from './grayboxLevel';
+import { GRAYBOX_ABILITY_GAPS, GRAYBOX_LEVEL } from './grayboxLevel';
 import { describePit, findEdges, findPitLandings, groundRow, simulateEdgeJump } from './levelCheck';
 import { parseAsciiMap } from './tilemap';
 
@@ -53,6 +53,12 @@ describe('레벨 점검(달려 뛰기 시뮬레이션)', () => {
     expect(describePit({ ...r, landX: null })).toContain('땅에서 3칸');
   });
 
+  it('능력용 틈은 따로 표시하지 않으면 경고로 잡히고, 표시하면 빠진다', () => {
+    const { map } = parseAsciiMap(GRAYBOX_LEVEL);
+    expect(findPitLandings(map, DEFAULT_TUNING).length).toBeGreaterThan(0);
+    expect(findPitLandings(map, DEFAULT_TUNING, GRAYBOX_ABILITY_GAPS)).toEqual([]);
+  });
+
   it('달려 뛰어도 못 건너는 넓은 구멍은 경고로 잡힌다', () => {
     const pits = findPitLandings(flat(10, 8), DEFAULT_TUNING);
     expect(pits.length).toBeGreaterThan(0);
@@ -61,7 +67,7 @@ describe('레벨 점검(달려 뛰기 시뮬레이션)', () => {
   it('회색 상자 맵은 모든 발판 끝에서 앞뒤로 달려 뛰어도 구멍에 빠지지 않는다', () => {
     const { map } = parseAsciiMap(GRAYBOX_LEVEL);
     expect(findEdges(map).length).toBeGreaterThan(10);
-    const pits = findPitLandings(map, DEFAULT_TUNING).map(
+    const pits = findPitLandings(map, DEFAULT_TUNING, GRAYBOX_ABILITY_GAPS).map(
       (p) => `col ${p.col} row ${p.row} dir ${p.dir}`,
     );
     expect(pits).toEqual([]);
