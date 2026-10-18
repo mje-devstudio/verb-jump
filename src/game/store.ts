@@ -1,11 +1,6 @@
 import type { VerbEntry } from './data/verbs';
 
-/** 클리어 순간 결과 요약(결과 화면 F11 전까지 배너에 쓴다). */
-export interface ClearSummary {
-  clock: string;
-  onTime: boolean;
-  score: number;
-}
+import type { ResultData } from './result';
 
 /**
  * 게임 → React로 올라가는 값(F09). 사람이 읽는 값만 담는다.
@@ -25,7 +20,8 @@ export interface GameSnapshot {
   clock: string;
   late: boolean;
   paused: boolean;
-  cleared: ClearSummary | null;
+  /** 회사 문에 닿으면 채워지는 한 판 결과(F11). */
+  result: ResultData | null;
 }
 
 export interface GameStore {
@@ -45,7 +41,7 @@ export const INITIAL_SNAPSHOT: GameSnapshot = Object.freeze({
   clock: '8:57:00',
   late: false,
   paused: false,
-  cleared: null,
+  result: null,
 });
 
 export function createGameStore(initial: GameSnapshot = INITIAL_SNAPSHOT): GameStore {

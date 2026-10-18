@@ -2,22 +2,13 @@ import { useEffect, useRef, useState, type RefObject } from 'react';
 import { DEFAULT_TUNING, STEP_S, VIEW_H, VIEW_W } from '../shared/rules/tuning';
 import { speak } from '../shared/lib/tts';
 import { KeyboardControls } from './input';
-import { COMMUTE_VERBS } from './data/verbs';
-import { parseTiledMap } from './level/tiled';
 import { FixedStepLoop, LoopDriver, pauseOnHidden } from './loop';
 import { GrayboxRenderer } from './render/grayboxRenderer';
 import type { GameStore } from './store';
 import { syncHud } from './hudSync';
-import { createWorld, stepWorld } from './world';
+import { createWorld, stepWorld, type LevelDef } from './world';
 
 type RunState = 'loading' | 'running' | 'hidden' | 'resuming' | 'error';
-
-/** 1스테이지 맵. 스테이지 API(F01)가 들어오면 응답의 map 주소로 바뀐다. */
-async function loadCommuteLevel() {
-  const res = await fetch('/maps/commute.tmj');
-  if (!res.ok) throw new Error(`맵 요청 실패: ${res.status}`);
-  return parseTiledMap((await res.json()) as unknown, COMMUTE_VERBS);
-}
 
 /** 창 크기에 맞는 가장 큰 정수 배율(nearest 확대 + 레터박스). */
 function integerScale(w: number, h: number): number {
@@ -34,9 +25,12 @@ export interface GameController {
  * 프레임마다 바뀌는 값은 React 상태에 두지 않는다. React는 화면 상태(로딩·일시정지)만 안다.
  */
 export function GameCanvas({
+  level,
   store,
   controllerRef,
 }: {
+  /** 스테이지 API(F01)로 받아 둔 레벨. 이 컴포넌트는 그리기·루프만 맡는다. */
+  level: LevelDef;
   store: GameStore;
   controllerRef?: RefObject<GameController | null>;
 }) {
@@ -50,8 +44,8 @@ export function GameCanvas({
     let cleanup: (() => void) | null = null;
 
     const rendererReady = GrayboxRenderer.create();
-    Promise.all([rendererReady, loadCommuteLevel()]).then(
-      ([renderer, level]) => {
+    rendererReady.then(
+      (renderer) => {
         if (disposed) {
           renderer.destroy(); // StrictMode 이중 마운트·빠른 이탈: 초기화가 끝난 뒤 정리
           return;
@@ -120,7 +114,7 @@ export function GameCanvas({
       disposed = true;
       cleanup?.();
     };
-  }, [store, controllerRef]);
+  }, [level, store, controllerRef]);
 
   return (
     <div
@@ -132,7 +126,7 @@ export function GameCanvas({
           {runState === 'loading' && '불러오는 중…'}
           {runState === 'hidden' && '일시정지'}
           {runState === 'resuming' && '3초 뒤 다시 시작해요'}
-          {runState === 'error' && '맵을 불러오지 못했어요. 새로고침해 주세요.'}
+          {runState === 'error' && '게임 화면을 만들지 못했어요(WebGL). 새로고침해 주세요.'}
         </p>
       )}
     </div>

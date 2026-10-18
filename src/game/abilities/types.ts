@@ -2,15 +2,10 @@ import type { TileMap } from '../level/tilemap';
 import type { PlayerState, StepMods } from '../physics/player';
 import type { Tuning } from '../../shared/rules/tuning';
 
-export const ABILITY_IDS = [
-  'climb',
-  'float',
-  'break',
-  'joke-sleep',
-  'joke-dance',
-  'joke-brake',
-] as const;
-export type AbilityId = (typeof ABILITY_IDS)[number];
+import type { AbilityId } from '../../shared/rules/abilities';
+
+// 능력 id 목록은 서버(스테이지 API)도 쓰므로 shared에 둔다.
+export { ABILITY_IDS, type AbilityId } from '../../shared/rules/abilities';
 
 /** 그리기(F12)와 HUD가 쓰는 지금 동작. 색만이 아니라 동작으로 능력을 구분한다(접근성). */
 export type AbilityPose = 'none' | 'climb' | 'float' | 'break' | 'sleep' | 'dance' | 'skid';

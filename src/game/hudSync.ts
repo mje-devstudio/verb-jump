@@ -1,6 +1,6 @@
 import { formatClock, isOnTime } from '../shared/rules/clock';
-import { isWordComplete, spellMask } from '../shared/rules/letters';
-import { score } from '../shared/rules/score';
+import { spellMask } from '../shared/rules/letters';
+import { buildResult } from './result';
 import type { GameStore } from './store';
 import { drainEvents, worldClock, type World } from './world';
 
@@ -40,12 +40,5 @@ export function syncHud(
     clock: formatClock(clock),
     late: !isOnTime(clock),
   });
-  if (world.cleared && !store.getSnapshot().cleared) {
-    const s = score({
-      coins: world.coins,
-      wordComplete: isWordComplete(world.spellWord, world.letterGot),
-      clock,
-    });
-    store.update({ cleared: { clock: formatClock(clock), onTime: s.onTime, score: s.total } });
-  }
+  if (world.cleared && !store.getSnapshot().result) store.update({ result: buildResult(world) });
 }

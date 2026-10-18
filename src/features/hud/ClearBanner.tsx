@@ -1,22 +1,21 @@
 import type { GameSnapshot, GameStore } from '../../game/store';
 import { useGameStore } from './useGameStore';
 
-const selectCleared = (s: GameSnapshot) => s.cleared;
+const selectResult = (s: GameSnapshot) => s.result;
 
-/** 임시 클리어 표시. 결과 화면(점수 내역·복습·랭킹)은 F11에서 만든다. */
+/** 회사 문에 닿은 순간 잠깐 보이는 배너. 곧 결과 화면(F11)으로 넘어간다. */
 export function ClearBanner({ store }: { store: GameStore }) {
-  const cleared = useGameStore(store, selectCleared);
-  if (!cleared) return null;
+  const result = useGameStore(store, selectResult);
+  if (!result) return null;
   return (
     <div
       role="status"
       className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-md border-2 border-ok bg-panel/90 px-6 py-3.5 text-center"
     >
-      <p className="text-2xl font-bold">{cleared.onTime ? '정시 출근!' : '지각…'}</p>
+      <p className="text-2xl font-bold">{result.score.onTime ? '정시 출근!' : '지각…'}</p>
       <p className="font-mono">
-        {cleared.clock} 도착 · {cleared.score.toLocaleString()}점
+        {result.arrival} 도착 · {result.score.total.toLocaleString()}점
       </p>
-      <p className="text-[13px] text-muted">자세한 결과 화면은 F11에서</p>
     </div>
   );
 }

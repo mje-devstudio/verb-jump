@@ -11,3 +11,14 @@ export function speak(text: string, lang = 'en-US'): void {
   u.rate = 0.9;
   synth.speak(u);
 }
+
+/**
+ * 첫 사용자 동작(시작 버튼)에서 한 번 불러 브라우저 음성 출력을 깨운다.
+ * iOS Safari 등은 사용자 동작 안에서 처음 재생해야 이후 재생을 허용한다.
+ */
+export function unlockSpeech(): void {
+  if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(' ');
+  u.volume = 0;
+  window.speechSynthesis.speak(u);
+}

@@ -120,6 +120,10 @@ export interface World {
   readonly letterTaken: boolean[];
   /** 단어 글자마다 모았는가. 맞아도 흘리지 않는다. */
   letterGot: boolean[];
+  /** 얻은 맞는 동사(처음 얻은 순서, 중복 없음). 결과 화면 '배운 동사'. */
+  readonly learnedVerbs: string[];
+  /** 얻은 오답 동사(처음 얻은 순서, 중복 없음). 결과 화면 '잘못 쓴 동사 복습'. */
+  readonly wrongVerbs: string[];
   /** 이번 프레임까지 쌓인 알림. 소비하는 쪽이 drainEvents로 비운다. */
   readonly events: WorldEvent[];
 }
@@ -169,6 +173,8 @@ export function createWorld(level: LevelDef): World {
     letterSlot,
     letterTaken: letters.map(() => false),
     letterGot: [...spellWord].map(() => false),
+    learnedVerbs: [],
+    wrongVerbs: [],
     events: [],
   };
 }
@@ -249,6 +255,8 @@ export function gainVerb(w: World, verb: string, ctx: AbilityContext): void {
   w.ability = mod.create();
   w.verb = verb;
   w.ability.onGain(ctx);
+  const log = mod.correct ? w.learnedVerbs : w.wrongVerbs;
+  if (!log.includes(verb)) log.push(verb);
   w.events.push({ type: 'verb_gained', verb, ability: mod.id, correct: mod.correct });
 }
 

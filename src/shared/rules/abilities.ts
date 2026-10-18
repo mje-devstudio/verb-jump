@@ -3,6 +3,21 @@
  * 손맛 기본 수치(tuning.ts)와 마찬가지로 이 파일 한 곳에만 둔다.
  */
 
+/** 능력 id. 스테이지 데이터의 verbs[].ability가 이 중 하나여야 한다. */
+export const ABILITY_IDS = [
+  'climb',
+  'float',
+  'break',
+  'joke-sleep',
+  'joke-dance',
+  'joke-brake',
+] as const;
+export type AbilityId = (typeof ABILITY_IDS)[number];
+
+export function isAbilityId(v: unknown): v is AbilityId {
+  return typeof v === 'string' && (ABILITY_IDS as readonly string[]).includes(v);
+}
+
 /** PRD: sleep 2초 졸기, 시계 3초 손해. */
 export const SLEEP_MS = 2000;
 export const SLEEP_CLOCK_PENALTY_MS = 3000;
