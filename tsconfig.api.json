@@ -1,0 +1,14 @@
+{
+  // Vercel이 api/를 Node ESM으로 실행하는 것처럼 변환해 보는 설정(scripts/check-api-esm.mjs).
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "allowImportingTsExtensions": false,
+    "outDir": ".api-check",
+    "rootDir": ".",
+    "declaration": false,
+    "types": []
+  },
+  "include": ["api/**/*.ts"],
+  "exclude": ["**/*.test.ts"]
+}

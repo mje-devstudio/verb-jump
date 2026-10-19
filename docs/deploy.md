@@ -20,7 +20,7 @@ git push -u origin main
 ## 2. Vercel 프로젝트 (사람)
 
 - Vercel에서 GitHub 저장소를 Import. Framework는 `vercel.json`의 `vite`, 빌드 `npm run build`, 출력 `dist`, Node 22(`package.json` engines).
-- 첫 배포 뒤 받은 주소(예: `https://<프로젝트>.vercel.app`)를 프로젝트 환경 변수 `VITE_SITE_URL`에 넣고(끝에 `/` 없이) 다시 배포한다. 링크 미리보기의 `og:image`가 절대 주소가 된다.
+- 운영 주소는 `.env.production`의 `VITE_SITE_URL`(현재 `https://verb-jump.vercel.app`)에 둔다. 링크 미리보기의 `og:url`·`og:image`가 절대 주소가 된다. 사용자 지정 도메인을 붙이면 이 값을 바꾼다(Vercel 환경 변수로 덮어써도 된다).
 - Git 연결이면 `main`에 합칠 때마다 운영 배포, PR마다 미리보기 배포가 된다.
 
 ## 3. 배포 뒤 확인 (명령이 끝났다고 성공이 아니다)
@@ -42,4 +42,10 @@ Vercel 대시보드 Deployments에서 이전 배포를 Promote(즉시 되돌리�
 ## 로컬에서 확인한 것 / 못 한 것
 
 - 확인: `npm run build` 성공, `dist/index.html`의 공유 미리보기 메타, 로컬 `/api`(같은 핸들러), 에러 바운더리(브라우저에서 게임 루프 오류 → 다시 시작 화면).
-- 못 함: Vercel에서 실제 함수 실행(Web 표준 `GET` 핸들러는 Vercel 문서에서 지원 확인), Vercel의 `[id].ts` 동적 경로, 실제 링크 미리보기 크롤링. 배포 뒤 위 표로 확인한다.
+- 배포 전: `npm run check:api`로 `api/`를 Node ESM으로 실제 실행해 본다(이슈 005 — 로컬 개발 서버·Vitest는 확장자 문제를 숨긴다).
+
+## 배포 기록
+
+| 날짜       | 커밋                                                             | 결과                                                                                                                                                                                                         |
+| ---------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-10-19 | `7c0ce42` (대시보드 Import, 운영 `https://verb-jump.vercel.app`) | 페이지·맵·스프라이트·대표 이미지·보안 헤더·자산 캐시 정상. **API 모두 500** `FUNCTION_INVOCATION_FAILED` → [이슈 005](issues/005-api-esm-extension.md). 팀 전용 주소는 Vercel 기본 보호(로그인)로 막힘(정상) |

@@ -20,4 +20,6 @@ jobs:
       - run: npm run lint
       - run: npx prettier --check .
       - run: npm test
+      # api/를 Node ESM으로 실제 실행해 본다(Vite·Vitest가 숨기는 확장자 문제, 이슈 005)
+      - run: npm run check:api
       - run: npm run build

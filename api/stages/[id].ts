@@ -1,5 +1,5 @@
-import { STAGES } from '../../src/shared/stages/commute';
-import { applyChaos, error, json, readChaos, realDeps, type Deps } from '../_lib/http';
+import { STAGES } from '../../src/shared/stages/commute.js';
+import { applyChaos, error, json, readChaos, realDeps, type Deps } from '../_lib/http.js';
 
 /** URL 경로 /api/stages/:id 에서 id를 꺼낸다. */
 export function stageIdFrom(url: URL): string {

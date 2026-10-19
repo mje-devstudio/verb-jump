@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "map:commute": "node scripts/gen-commute-map.mjs",
     "sfx:gen": "node scripts/gen-sfx.mjs",
-    "sprites:placeholder": "node scripts/gen-placeholder-sprites.mjs"
+    "sprites:placeholder": "node scripts/gen-placeholder-sprites.mjs",
+    "check:api": "node scripts/check-api-esm.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.4",

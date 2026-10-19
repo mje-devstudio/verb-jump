@@ -2,7 +2,7 @@
  * 서버리스 함수 공통(F02): delay·fail 쿼리로 지연과 실패를 재현하고, 오류는 같은 형태로 보낸다.
  * Web 표준 Request/Response만 써서 Vercel 함수와 로컬 Vite 미들웨어가 같은 코드를 실행한다.
  */
-import type { ApiErrorBody } from '../../src/shared/stages/types';
+import type { ApiErrorBody } from '../../src/shared/stages/types.js';
 
 export const MAX_DELAY_MS = 3000;
 export const FAIL_RATES = [0, 0.5, 1] as const;

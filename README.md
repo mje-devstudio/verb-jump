@@ -2,7 +2,7 @@
 
 영어 동사를 단 적을 밟으면 그 동사의 능력이 생기는 횡스크롤 플랫포머. `climb`를 얻으면 벽을 오르고, `float`를 얻으면 공중에 뜬다. 틀린 동사(`sleep`·`dance`·`brake`)는 웃긴 능력으로 자기 뜻을 보여 준다. 8:57에 집을 나서 9:00 전에 회사 문에 닿자.
 
-- 플레이: _배포 후 주소를 적는다(F13)_
+- 플레이: https://verb-jump.vercel.app (배포 버전 검증 중 — [배포 기록](docs/deploy.md#배포-기록))
 - 기술: React 19 · TypeScript strict · PixiJS 8 · Vite · TanStack Query · Tailwind 4 · Vitest · MSW · Vercel Functions
 
 > 이 README는 실행 방법 중심의 초안이다. 30초 플레이 영상, 공고 항목별 구현 포인트, 측정 결과, 이슈 기록, 작업 범위(직접 그린 도트·직접 쓴 코드·AI가 만든 뒤 검토한 코드)는 PRD "README·포트폴리오 구성"대로 1차 게이트 전에 채운다.

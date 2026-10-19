@@ -1,4 +1,4 @@
-import { isAbilityId, type AbilityId } from '../rules/abilities';
+import { isAbilityId, type AbilityId } from '../rules/abilities.js';
 
 /** GET /api/stages/:id 응답의 verbs 항목(PRD API 명세). */
 export interface VerbEntry {

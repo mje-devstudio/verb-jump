@@ -1,4 +1,4 @@
-import type { StageData, VerbEntry } from './types';
+import type { StageData, VerbEntry } from './types.js';
 
 /**
  * 1스테이지 '지각 직전 출근길' 목업(서버 응답 원본). PRD API 명세의 예시 형태 그대로다.
