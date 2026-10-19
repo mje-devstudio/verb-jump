@@ -10,6 +10,8 @@
   --color-joke: #f472b6;
   --color-ok: #4ade80;
   --color-late: #f87171;
+  /* 게임 화면 전용 한글 픽셀 글꼴(갈무리11, 필요할 때 불러온다) */
+  --font-pixel: 'Galmuri11', system-ui, sans-serif;
 }
 
 html,

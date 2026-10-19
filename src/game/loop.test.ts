@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_TUNING, STEP_S } from '../shared/rules/tuning';
 import { grayboxLevel } from './level/grayboxLevel';
 import { NO_CONTROLS } from './input';
-import { FixedStepLoop, LoopDriver, type FrameClock } from './loop';
+import { FixedStepLoop, LoopDriver, PauseGate, pauseOnHidden, type FrameClock } from './loop';
 import { createWorld, stepWorld } from './world';
 
 /** 스텝 번호로 정해지는 입력: 오른쪽으로 달리며 0.2초마다 점프. */
@@ -114,5 +114,83 @@ describe('F04 일시정지(LoopDriver)', () => {
     driver.stop();
     tick(1000);
     expect(steps).toBe(0);
+  });
+});
+
+describe('F04 일시정지 사유와 탭 이탈', () => {
+  afterEach(() => vi.useRealTimers());
+
+  /** visibilitychange를 손으로 보내는 가짜 문서. */
+  function fakeDoc() {
+    let listener: (() => void) | null = null;
+    const doc = {
+      hidden: false,
+      addEventListener: (_: string, l: () => void) => {
+        listener = l;
+      },
+      removeEventListener: () => {
+        listener = null;
+      },
+    };
+    const setHidden = (h: boolean) => {
+      doc.hidden = h;
+      listener?.();
+    };
+    return { doc: doc as unknown as Document, setHidden };
+  }
+
+  it('사유가 하나라도 있으면 멈추고 모두 풀려야 돈다', () => {
+    const paused: boolean[] = [];
+    const gate = new PauseGate({ setPaused: (p) => paused.push(p) });
+    gate.set('user', true);
+    gate.set('portrait', true);
+    gate.set('user', false);
+    expect(paused.at(-1)).toBe(true);
+    gate.set('portrait', false);
+    expect(paused.at(-1)).toBe(false);
+  });
+
+  it('탭을 벗어나면 바로 멈추고, 돌아오면 3초 뒤 다시 돈다', () => {
+    vi.useFakeTimers();
+    const states: string[] = [];
+    const paused: boolean[] = [];
+    const gate = new PauseGate({ setPaused: (p) => paused.push(p) });
+    const { doc, setHidden } = fakeDoc();
+    pauseOnHidden(gate, { doc, onChange: (s) => states.push(s) });
+    setHidden(true);
+    expect(paused.at(-1)).toBe(true);
+    setHidden(false);
+    vi.advanceTimersByTime(2999);
+    expect(paused.at(-1)).toBe(true);
+    vi.advanceTimersByTime(1);
+    expect(paused.at(-1)).toBe(false);
+    expect(states).toEqual(['hidden', 'resuming', 'running']);
+  });
+
+  it('사용자가 멈춘 상태였다면 탭에서 돌아와도 저절로 시작하지 않는다', () => {
+    vi.useFakeTimers();
+    const paused: boolean[] = [];
+    const gate = new PauseGate({ setPaused: (p) => paused.push(p) });
+    const { doc, setHidden } = fakeDoc();
+    pauseOnHidden(gate, { doc });
+    gate.set('user', true);
+    setHidden(true);
+    setHidden(false);
+    vi.advanceTimersByTime(5000);
+    expect(paused.at(-1)).toBe(true);
+  });
+
+  it('3초를 기다리는 중에 다시 떠나면 재개 예약을 취소한다', () => {
+    vi.useFakeTimers();
+    const paused: boolean[] = [];
+    const gate = new PauseGate({ setPaused: (p) => paused.push(p) });
+    const { doc, setHidden } = fakeDoc();
+    pauseOnHidden(gate, { doc });
+    setHidden(true);
+    setHidden(false);
+    vi.advanceTimersByTime(1000);
+    setHidden(true);
+    vi.advanceTimersByTime(5000);
+    expect(paused.at(-1)).toBe(true);
   });
 });

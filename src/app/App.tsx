@@ -3,6 +3,7 @@ import type { ResultData } from '../game/result';
 import type { LevelDef } from '../game/world';
 import type { StageData } from '../shared/stages/types';
 import { unlockSpeech } from '../shared/lib/tts';
+import { sfx } from '../game/audio/sfx';
 import { DevPanel } from '../features/devtools/DevPanel';
 import { devToolsEnabled } from '../features/devtools/devSettings';
 import { GameScreen } from '../features/game/GameScreen';
@@ -51,7 +52,9 @@ export function App() {
   const [screen, dispatch] = useReducer(reducer, { name: 'title' });
 
   const start = useCallback((stage: StageData, level: LevelDef) => {
-    unlockSpeech(); // 시작 버튼이 오디오를 허용하는 첫 사용자 동작
+    // 시작 버튼이 오디오를 허용하는 첫 사용자 동작
+    unlockSpeech();
+    sfx.unlock();
     dispatch({ type: 'start', stage, level });
   }, []);
 

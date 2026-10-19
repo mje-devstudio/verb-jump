@@ -39,6 +39,7 @@ import { TILE, type Tuning } from '../shared/rules/tuning';
 /** 게임 루프 → 바깥(HUD·TTS·학습 이벤트)으로 나가는 알림. 프레임마다가 아니라 일이 생길 때만. */
 export type WorldEvent =
   | { type: 'verb_gained'; verb: string; ability: AbilityId; correct: boolean }
+  | { type: 'jump' }
   | { type: 'hurt'; spilled: number; lifeLost: boolean }
   | { type: 'fell' }
   | { type: 'game_over' }
@@ -305,7 +306,9 @@ export function stepWorld(
 
   // 2) 물리
   const prevBottom = w.player.y + w.player.h;
+  const wasRising = w.player.rising;
   stepPlayer(w.player, input, w.map, tuning, dt, mods);
+  if (!wasRising && w.player.rising) w.events.push({ type: 'jump' });
   w.invincibleMs = Math.max(0, w.invincibleMs - dt * 1000);
   w.hurtStunMs = Math.max(0, w.hurtStunMs - dt * 1000);
 

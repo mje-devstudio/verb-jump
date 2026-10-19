@@ -7,7 +7,7 @@ const failLabel = (r: number) => (r === 0 ? '끄기' : r === 1 ? '항상' : `${r
 export function DevPanel() {
   const s = useDevSettings();
   return (
-    <details className="fixed bottom-2 right-2 z-50 rounded-md border border-muted/50 bg-panel/95 px-3 py-2 text-sm">
+    <details className="fixed left-[max(8px,env(safe-area-inset-left))] top-16 z-50 rounded-md border border-muted/50 bg-panel/95 px-3 py-2 text-sm">
       <summary className="cursor-pointer select-none">개발자 토글</summary>
       <fieldset className="mt-2">
         <legend className="text-muted">API 지연</legend>

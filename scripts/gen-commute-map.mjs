@@ -2,7 +2,7 @@
 // 실행: npm run map:commute → public/maps/commute.tmj, public/maps/graybox-tiles.png
 // 이 파일은 초안 생성용이다. Tiled에서 다듬은 뒤에는 .tmj가 원본이 되므로 다시 돌리면 덮어쓴다(주의).
 import { writeFileSync } from 'node:fs';
-import { deflateSync } from 'node:zlib';
+import { png } from './lib/png.mjs';
 
 const T = 10;
 const COLS = 370;
@@ -124,43 +124,6 @@ for (const [c0, c1] of [g1, g2, g3]) add('ability-gap', c0, GROUND, {}, (c1 - c0
 // ── 타일셋: 0 solid · 1 oneway · 2 cracked (회색 상자, 도트는 F12) ─────
 const KINDS = { '#': 1, '-': 2, X: 3 }; // gid = firstgid(1) + tile id
 const data = grid.flat().map((ch) => KINDS[ch] ?? 0);
-
-function png(width, height, rgba) {
-  const crcTable = Array.from({ length: 256 }, (_, n) => {
-    let c = n;
-    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    return c >>> 0;
-  });
-  const crc = (buf) => {
-    let c = 0xffffffff;
-    for (const b of buf) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8);
-    return (c ^ 0xffffffff) >>> 0;
-  };
-  const chunk = (type, body) => {
-    const len = Buffer.alloc(4);
-    len.writeUInt32BE(body.length);
-    const tb = Buffer.concat([Buffer.from(type), body]);
-    const c = Buffer.alloc(4);
-    c.writeUInt32BE(crc(tb));
-    return Buffer.concat([len, tb, c]);
-  };
-  const ihdr = Buffer.alloc(13);
-  ihdr.writeUInt32BE(width, 0);
-  ihdr.writeUInt32BE(height, 4);
-  ihdr[8] = 8; // bit depth
-  ihdr[9] = 6; // RGBA
-  const raw = Buffer.alloc((width * 4 + 1) * height);
-  for (let y = 0; y < height; y++) {
-    raw[y * (width * 4 + 1)] = 0;
-    rgba.copy(raw, y * (width * 4 + 1) + 1, y * width * 4, (y + 1) * width * 4);
-  }
-  return Buffer.concat([
-    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
-    chunk('IHDR', ihdr),
-    chunk('IDAT', deflateSync(raw)),
-    chunk('IEND', Buffer.alloc(0)),
-  ]);
-}
 
 const W = 3 * T;
 const px = Buffer.alloc(W * T * 4);

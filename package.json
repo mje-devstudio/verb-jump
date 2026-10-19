@@ -12,10 +12,13 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "map:commute": "node scripts/gen-commute-map.mjs"
+    "map:commute": "node scripts/gen-commute-map.mjs",
+    "sfx:gen": "node scripts/gen-sfx.mjs",
+    "sprites:placeholder": "node scripts/gen-placeholder-sprites.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.4",
+    "jsfxr": "^1.4.1",
     "pixi.js": "^8.22.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
@@ -30,6 +33,7 @@
     "@vitejs/plugin-react": "^6.1.2",
     "eslint": "^10.13.0",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "galmuri": "^2.40.3",
     "globals": "^17.13.0",
     "jsdom": "^30.1.3",
     "msw": "^3.0.3",

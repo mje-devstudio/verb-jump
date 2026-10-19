@@ -14,7 +14,7 @@
 | 3    | F08 (+F29 선행) | Tiled 맵, 체크포인트, 레벨 시뮬레이션 테스트                          | 셀리아 / 베스퍼        | 자기 점검 완료 — [카드](cards/F08.md)                                 |
 | 4    | F09 · F26 · F27 | HUD 저장소(useSyncExternalStore), 코인·피격, 철자 코인                | 셀리아 / 베스퍼        | 자기 점검 완료 — [카드](cards/F09-F26-F27.md)                         |
 | 5    | F01 · F02 · F11 | 스테이지 API·재시도·지연/실패 토글, 결과 화면                         | 다리안·셀리아 / 베스퍼 | 자기 점검 완료 — [카드](cards/F01-F02-F11.md)                         |
-| 6    | F10 · F03 · F12 | 모바일 조작, 320×180 정수 배율 화면·카메라·컬링, 도트 리소스          | 셀리아·타비 / 베스퍼   | 대기                                                                  |
+| 6    | F10 · F03 · F12 | 모바일 조작, 320×180 정수 배율 화면·카메라·컬링, 도트 리소스          | 셀리아·타비 / 베스퍼   | 자기 점검 완료 — [카드](cards/F10-F03-F12.md), 도트 그림은 사람       |
 | 7    | F13             | Vercel 배포, 공유 미리보기, 에러 바운더리                             | 세이블 / 베스퍼        | 대기 (사람 승인 필요)                                                 |
 
 ## 2차(P1)·P2
@@ -27,7 +27,7 @@ F14 · F15 · F16 · F17 · F18 · F19 · F20 · F21 · F28 · F29(개발 모드
 
 ## 브랜치 (아직 main에 합치지 않음)
 
-`main` f149172 ← `F05-lab-airtime` 6ca14ef ← `F06-F07-stomp-abilities` ecbf72d ← `F08-commute-map` e137eb4 ← `F09-F26-F27-hud-coins-letters` 86176b4 ← `F01-F02-F11-stage-api-result`. 앞 브랜치가 합쳐지기 전이라 쌓아서 진행한다. 합치는 순서도 이 순서다.
+`main` f149172 ← `F05-lab-airtime` 6ca14ef ← `F06-F07-stomp-abilities` ecbf72d ← `F08-commute-map` e137eb4 ← `F09-F26-F27-hud-coins-letters` 86176b4 ← `F01-F02-F11-stage-api-result` b043c84 ← `F10-F03-F12-mobile-screen-assets`. 앞 브랜치가 합쳐지기 전이라 쌓아서 진행한다. 합치는 순서도 이 순서다.
 
 ## 이슈 기록
 

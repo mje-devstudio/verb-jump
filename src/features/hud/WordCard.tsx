@@ -22,7 +22,7 @@ export function WordCard({ store }: { store: GameStore }) {
   return (
     <div
       role="status"
-      className={`pointer-events-none absolute left-1/2 top-3 min-w-56 -translate-x-1/2 rounded-md border-2 bg-panel/90 px-4 py-2.5 text-center ${
+      className={`pointer-events-none absolute left-1/2 top-3 font-pixel min-w-56 -translate-x-1/2 rounded-md border-2 bg-panel/90 px-4 py-2.5 text-center ${
         correct ? 'border-accent' : 'border-dashed border-joke'
       }`}
     >

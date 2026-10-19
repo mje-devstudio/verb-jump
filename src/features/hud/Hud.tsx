@@ -97,7 +97,7 @@ export function PausedOverlay({ store }: { store: GameStore }) {
 
 export function Hud({ store, onTogglePause }: { store: GameStore; onTogglePause: () => void }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-5 gap-y-1 px-4 pt-2 text-[15px]">
+    <div className="flex flex-wrap items-center gap-x-5 gap-y-1 font-pixel pt-[max(8px,env(safe-area-inset-top))] pr-[max(16px,env(safe-area-inset-right))] pl-[max(16px,env(safe-area-inset-left))] text-[15px]">
       <Lives store={store} />
       <Coins store={store} />
       <Spell store={store} />

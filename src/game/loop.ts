@@ -97,41 +97,62 @@ export class LoopDriver {
 }
 
 /**
- * 탭을 벗어나면 즉시 멈추고, 돌아오면 resumeDelayMs 뒤 재개한다(S2: 3초 뒤 재개).
+ * 일시정지 사유를 따로 센다(사용자 · 탭 이탈 · 세로 화면). 하나라도 있으면 멈추고, 모두 풀려야 다시 돈다.
+ * 예: 사용자가 Esc로 멈춘 뒤 탭을 다녀와도 저절로 다시 시작하지 않는다.
+ */
+export type PauseReason = 'user' | 'hidden' | 'portrait';
+
+export class PauseGate {
+  private readonly reasons = new Set<PauseReason>();
+
+  constructor(private readonly driver: Pick<LoopDriver, 'setPaused'>) {}
+
+  set(reason: PauseReason, on: boolean): void {
+    if (on) this.reasons.add(reason);
+    else this.reasons.delete(reason);
+    this.driver.setPaused(this.reasons.size > 0);
+  }
+
+  has(reason: PauseReason): boolean {
+    return this.reasons.has(reason);
+  }
+}
+
+/**
+ * 탭을 벗어나면 즉시 멈추고, 돌아오면 resumeDelayMs 뒤 'hidden' 사유를 푼다(S2: 3초 뒤 재개).
  * @returns 해제 함수
  */
 export function pauseOnHidden(
-  driver: LoopDriver,
+  gate: Pick<PauseGate, 'set'>,
   opts: {
     resumeDelayMs?: number;
     onChange?: (state: 'hidden' | 'resuming' | 'running') => void;
+    doc?: Pick<Document, 'hidden' | 'addEventListener' | 'removeEventListener'>;
   } = {},
 ): () => void {
   const delay = opts.resumeDelayMs ?? 3000;
+  const doc = opts.doc ?? document;
   let timer: ReturnType<typeof setTimeout> | null = null;
   const clear = () => {
     if (timer !== null) clearTimeout(timer);
     timer = null;
   };
-  // 사용자가 직접 일시정지한 상태였다면 탭에 돌아와도 자동 재개하지 않는다.
-  let pausedByUser = false;
   const onVisibility = () => {
     clear();
-    if (document.hidden) {
-      pausedByUser = driver.isPaused;
-      driver.setPaused(true);
+    if (doc.hidden) {
+      gate.set('hidden', true);
       opts.onChange?.('hidden');
-    } else if (!pausedByUser) {
+    } else {
       opts.onChange?.('resuming');
       timer = setTimeout(() => {
-        driver.setPaused(false);
+        gate.set('hidden', false);
         opts.onChange?.('running');
       }, delay);
     }
   };
-  document.addEventListener('visibilitychange', onVisibility);
+  doc.addEventListener('visibilitychange', onVisibility);
   return () => {
     clear();
-    document.removeEventListener('visibilitychange', onVisibility);
+    doc.removeEventListener('visibilitychange', onVisibility);
   };
 }

@@ -1,0 +1,522 @@
+{
+ "frames": [
+  {
+   "filename": "hero 0.aseprite",
+   "frame": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 1.aseprite",
+   "frame": {
+    "x": 16,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 2.aseprite",
+   "frame": {
+    "x": 32,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 3.aseprite",
+   "frame": {
+    "x": 48,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 4.aseprite",
+   "frame": {
+    "x": 64,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 5.aseprite",
+   "frame": {
+    "x": 80,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 6.aseprite",
+   "frame": {
+    "x": 96,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 7.aseprite",
+   "frame": {
+    "x": 112,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 8.aseprite",
+   "frame": {
+    "x": 128,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 9.aseprite",
+   "frame": {
+    "x": 144,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 10.aseprite",
+   "frame": {
+    "x": 160,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 11.aseprite",
+   "frame": {
+    "x": 176,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 12.aseprite",
+   "frame": {
+    "x": 192,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 13.aseprite",
+   "frame": {
+    "x": 208,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 14.aseprite",
+   "frame": {
+    "x": 224,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 15.aseprite",
+   "frame": {
+    "x": 240,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 16.aseprite",
+   "frame": {
+    "x": 256,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 17.aseprite",
+   "frame": {
+    "x": 272,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 18.aseprite",
+   "frame": {
+    "x": 288,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  },
+  {
+   "filename": "hero 19.aseprite",
+   "frame": {
+    "x": 304,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 16,
+    "h": 16
+   },
+   "sourceSize": {
+    "w": 16,
+    "h": 16
+   },
+   "duration": 150
+  }
+ ],
+ "meta": {
+  "app": "scripts/gen-placeholder-sprites.mjs (Aseprite JSON Array 형식 흉내)",
+  "image": "hero.png",
+  "format": "RGBA8888",
+  "size": {
+   "w": 320,
+   "h": 16
+  },
+  "scale": "1",
+  "frameTags": [
+   {
+    "name": "idle",
+    "from": 0,
+    "to": 1,
+    "direction": "forward"
+   },
+   {
+    "name": "walk",
+    "from": 2,
+    "to": 5,
+    "direction": "forward"
+   },
+   {
+    "name": "jump",
+    "from": 6,
+    "to": 6,
+    "direction": "forward"
+   },
+   {
+    "name": "fall",
+    "from": 7,
+    "to": 7,
+    "direction": "forward"
+   },
+   {
+    "name": "climb",
+    "from": 8,
+    "to": 9,
+    "direction": "forward"
+   },
+   {
+    "name": "float",
+    "from": 10,
+    "to": 11,
+    "direction": "forward"
+   },
+   {
+    "name": "break",
+    "from": 12,
+    "to": 13,
+    "direction": "forward"
+   },
+   {
+    "name": "sleep",
+    "from": 14,
+    "to": 15,
+    "direction": "forward"
+   },
+   {
+    "name": "dance",
+    "from": 16,
+    "to": 17,
+    "direction": "forward"
+   },
+   {
+    "name": "skid",
+    "from": 18,
+    "to": 18,
+    "direction": "forward"
+   },
+   {
+    "name": "hurt",
+    "from": 19,
+    "to": 19,
+    "direction": "forward"
+   }
+  ]
+ }
+}

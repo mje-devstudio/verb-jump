@@ -1,8 +1,33 @@
+import { useEffect } from 'react';
 import type { LevelDef } from '../../game/world';
+import { loadGameFont } from '../../shared/lib/fonts';
 import type { StageData } from '../../shared/stages/types';
 import { loadBest } from '../result/bestRecord';
 import { DotLoadingBar } from '../stage/DotLoadingBar';
 import { useStage } from '../stage/useStage';
+import { settings, useSettings } from '../settings/settings';
+
+function Toggle({
+  label,
+  on,
+  onChange,
+}: {
+  label: string;
+  on: boolean;
+  onChange: (on: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={on}
+      onClick={() => onChange(!on)}
+      className="min-h-11 rounded border border-muted px-3 aria-checked:border-accent aria-checked:text-accent"
+    >
+      {label} {on ? '켜짐' : '꺼짐'}
+    </button>
+  );
+}
 
 /** S1 타이틀(F01): 스테이지를 불러오는 동안 도트 로딩 바, 실패하면 안내와 다시 시도. */
 export function TitleScreen({
@@ -14,6 +39,11 @@ export function TitleScreen({
 }) {
   const { stage, level, status, error, retry } = useStage(stageId);
   const best = loadBest(stageId);
+  const prefs = useSettings();
+  // 게임 HUD 글꼴을 미리 받아 둔다(타이틀 자체는 쓰지 않아 첫 화면 속도에 영향이 적다)
+  useEffect(() => {
+    void loadGameFont();
+  }, []);
   return (
     <section className="mx-auto flex h-full max-w-md flex-col items-center justify-center gap-6 px-4 text-center">
       <h1 className="text-4xl font-bold tracking-tight">
@@ -29,6 +59,10 @@ export function TitleScreen({
             최고 기록 <strong>{best.score.toLocaleString()}점</strong> · {best.arrival} 도착
           </p>
         )}
+      </div>
+      <div className="flex gap-2">
+        <Toggle label="효과음" on={prefs.sfx} onChange={(sfxOn) => settings.set({ sfx: sfxOn })} />
+        <Toggle label="발음" on={prefs.speech} onChange={(speech) => settings.set({ speech })} />
       </div>
       {status === 'loading' && <DotLoadingBar />}
       {status === 'error' && (
