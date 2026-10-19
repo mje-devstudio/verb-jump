@@ -4,3 +4,4 @@ package-lock.json
 licenses
 public/sprites
 .api-check
+coverage

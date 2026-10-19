@@ -43,5 +43,6 @@ docs/           진행표·작업 카드·이슈 기록·맵 규칙·도트 사�
 ## 문서
 
 - [진행표](docs/TASKS.md) · [이슈 기록](docs/issues/) · [PRD 수정 요청](docs/prd-changes.md)
+- [측정 기록](docs/measurements.md) · [학습 콘텐츠 검수](docs/content-review.md)
 - [맵 규칙](docs/level-format.md) · [도트 리소스 사양](docs/sprite-spec.md) · [배포 절차](docs/deploy.md)
 - [NOTICE(폰트·효과음 라이선스)](NOTICE.md)
