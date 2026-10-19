@@ -63,6 +63,8 @@ export class LoopDriver {
     private readonly loop: FixedStepLoop,
     private readonly render: (alpha: number) => void,
     private readonly clock: FrameClock = browserClock,
+    /** 갱신·그리기 중 오류. React 에러 바운더리는 rAF 안의 오류를 잡지 못하므로 여기서 넘긴다. */
+    private readonly onError?: (error: unknown) => void,
   ) {}
 
   start(): void {
@@ -90,8 +92,16 @@ export class LoopDriver {
   private readonly frame = (now: number): void => {
     const elapsed = this.last === null ? 0 : (now - this.last) / 1000;
     this.last = now;
-    const alpha = this.paused ? 0 : this.loop.advance(elapsed);
-    this.render(alpha);
+    try {
+      const alpha = this.paused ? 0 : this.loop.advance(elapsed);
+      this.render(alpha);
+    } catch (e) {
+      // 같은 오류가 매 프레임 반복되지 않게 멈추고 알린다
+      this.rafId = null;
+      if (this.onError) this.onError(e);
+      else throw e;
+      return;
+    }
     this.rafId = this.clock.request(this.frame);
   };
 }

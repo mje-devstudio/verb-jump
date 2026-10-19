@@ -105,6 +105,27 @@ describe('F04 일시정지(LoopDriver)', () => {
     expect(steps).toBe(2);
   });
 
+  it('갱신 중 오류가 나면 루프를 멈추고 onError로 넘긴다(rAF 오류는 React가 잡지 못하므로)', () => {
+    const errors: unknown[] = [];
+    let steps = 0;
+    const { clock, tick } = fakeClock();
+    const driver = new LoopDriver(
+      new FixedStepLoop(() => {
+        steps++;
+        throw new Error('스텝 오류');
+      }),
+      () => {},
+      clock,
+      (e) => errors.push(e),
+    );
+    driver.start();
+    tick(0);
+    tick(1000 / 60);
+    tick(2000 / 60);
+    expect(errors).toHaveLength(1);
+    expect(steps).toBe(1);
+  });
+
   it('stop 뒤에는 프레임을 요청하지 않는다', () => {
     let steps = 0;
     const { clock, tick } = fakeClock();

@@ -59,6 +59,9 @@ export function GameCanvas({
     onReadyRef.current = onReady;
   }, [onReady]);
   const [runState, setRunState] = useState<RunState>('loading');
+  // 게임 루프(rAF) 안의 오류를 렌더 중에 다시 던져 에러 바운더리(F13)가 잡게 한다
+  const [crash, setCrash] = useState<{ error: unknown } | null>(null);
+  if (crash) throw crash.error instanceof Error ? crash.error : new Error(String(crash.error));
 
   useEffect(() => {
     const host = hostRef.current;
@@ -75,7 +78,22 @@ export function GameCanvas({
         }
         const world = createWorld(level);
         // 개발 모드에서만 콘솔·자동 점검용으로 world를 노출한다(배포 빌드에서는 제거됨).
-        if (import.meta.env.DEV) Object.assign(window, { __verbJumpWorld: world });
+        if (import.meta.env.DEV) {
+          Object.assign(window, {
+            __verbJumpWorld: world,
+            // 대표 이미지 캡처용: 같은 작업 안에서 그리고 바로 읽어야 WebGL 버퍼가 비워지기 전에 복사된다
+            // 대표 이미지 저장(개발 전용): 같은 작업 안에서 그리고 바로 복사해야 WebGL 버퍼가 비워지기 전에 읽힌다
+            __verbJumpSaveOg: async () => {
+              const { saveOgImage } = await import('../dev/ogCapture');
+              renderer.render(world, 1, true);
+              const snap = document.createElement('canvas');
+              snap.width = renderer.canvas.width;
+              snap.height = renderer.canvas.height;
+              snap.getContext('2d')?.drawImage(renderer.canvas, 0, 0);
+              return saveOgImage(snap);
+            },
+          });
+        }
         const controls = new KeyboardControls();
         const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
         let cardId = 0;
@@ -84,19 +102,24 @@ export function GameCanvas({
         const sample = () =>
           touchInput ? mergeControls(controls.sample(), touchInput.sample()) : controls.sample();
         const loop = new FixedStepLoop(() => stepWorld(world, sample(), tuning, STEP_S, worldOpts));
-        const driver = new LoopDriver(loop, (alpha) => {
-          syncHud(world, store, {
-            nextCardId: () => ++cardId,
-            onVerbGained: (v) => {
-              if (settings.get().speech) speak(v);
-            },
-            onEvent: (e) => {
-              const name = soundFor(e);
-              if (name && settings.get().sfx) sfx.play(name);
-            },
-          });
-          renderer.render(world, alpha, reducedMotion.matches);
-        });
+        const driver = new LoopDriver(
+          loop,
+          (alpha) => {
+            syncHud(world, store, {
+              nextCardId: () => ++cardId,
+              onVerbGained: (v) => {
+                if (settings.get().speech) speak(v);
+              },
+              onEvent: (e) => {
+                const name = soundFor(e);
+                if (name && settings.get().sfx) sfx.play(name);
+              },
+            });
+            renderer.render(world, alpha, reducedMotion.matches);
+          },
+          undefined,
+          (error) => setCrash({ error }),
+        );
         const gate = new PauseGate(driver);
         const togglePause = () => {
           if (world.cleared) return;

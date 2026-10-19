@@ -1,3 +1,4 @@
+import { writeFile } from 'node:fs/promises';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import type { Plugin, ViteDevServer } from 'vite';
 
@@ -38,6 +39,17 @@ export function devApi(): Plugin {
     configureServer(server: ViteDevServer) {
       server.middlewares.use((req, res, next) => {
         const path = (req.url ?? '').split('?')[0] ?? '';
+        // 개발 전용: 대표 이미지 저장(src/dev/ogCapture.ts). 개발 서버에만 있고 배포에는 없다.
+        if (path === '/__dev/save-og' && req.method === 'POST') {
+          void (async () => {
+            const chunks: Buffer[] = [];
+            for await (const c of req) chunks.push(c as Buffer);
+            await writeFile(new URL('../public/og.jpg', import.meta.url), Buffer.concat(chunks));
+            res.statusCode = 204;
+            res.end();
+          })().catch(next);
+          return;
+        }
         const route = ROUTES.find((r) => r.pattern.test(path));
         if (!route) return next();
         void (async () => {
