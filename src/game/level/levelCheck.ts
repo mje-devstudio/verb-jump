@@ -1,7 +1,7 @@
 import { isSolid, mapHeightPx, Tile, tileAt, type TileMap } from './tilemap';
 import { createPlayer, NO_MODS, stepPlayer } from '../physics/player';
 import { overlaps } from '../../shared/rules/stomp';
-import type { LetterSpawn } from '../world';
+import type { LetterSpawn, LevelDef } from '../world';
 import { FLOAT_MAX_FALL } from '../../shared/rules/abilities';
 import { PLAYER_H, STEP_S, TILE, type Tuning } from '../../shared/rules/tuning';
 
@@ -183,4 +183,39 @@ export function findUnreachableLetters(
   return letters.filter(
     (l) => !canReachLetter(map, tuning, l, { useFloat: l.ability === 'float' }),
   );
+}
+
+/** 개발 모드 경고 한 건(F29). x·y는 맵 위 표시 자리(칸 왼쪽 위, px). */
+export interface LevelWarning {
+  kind: 'pit' | 'letter';
+  message: string;
+  x: number;
+  y: number;
+}
+
+/**
+ * 맵을 불러올 때 돌리는 레벨 점검(F29): 모든 발판 끝에서 지금 수치로 앞뒤로 달려 뛰어 구멍에 떨어지는 곳과,
+ * 닿을 수 없는 철자 코인을 경고로 모은다. CI의 맵 테스트(commute.test.ts)와 같은 함수를 쓴다.
+ */
+export function checkLevel(
+  level: Pick<LevelDef, 'map' | 'letters' | 'abilityGaps'>,
+  tuning: Readonly<Tuning>,
+): LevelWarning[] {
+  const pits = findPitLandings(level.map, tuning, level.abilityGaps ?? []).map(
+    (r): LevelWarning => ({
+      kind: 'pit',
+      message: describePit(r),
+      x: r.col * TILE,
+      y: r.row * TILE,
+    }),
+  );
+  const letters = findUnreachableLetters(level.map, tuning, level.letters ?? []).map(
+    (l): LevelWarning => ({
+      kind: 'letter',
+      message: `철자 코인 ${l.char}(col ${Math.floor(l.x / TILE)}) · ${l.ability === 'none' ? '능력 없이' : `${l.ability}로`} 닿을 수 없음`,
+      x: l.x,
+      y: l.y,
+    }),
+  );
+  return [...pits, ...letters];
 }

@@ -41,6 +41,8 @@ export class GrayboxRenderer {
   /** 도트 리소스가 있을 때만 쓰는 스프라이트. */
   private readonly heroSprite: Sprite | null;
   private readonly enemySprites = new Map<object, Sprite>();
+  /** F29 개발 모드: 레벨 점검 경고 자리(빨간 테두리). 맨 위에 그린다. */
+  private readonly levelMarks = new Graphics();
   private mapVersion = -1;
   private propsDrawn = false;
   private frame = 0;
@@ -50,7 +52,7 @@ export class GrayboxRenderer {
     private readonly sprites: SpriteSet | null,
   ) {
     app.stage.addChild(this.level);
-    this.level.addChild(this.tiles, this.enemies, this.player);
+    this.level.addChild(this.tiles, this.enemies, this.player, this.levelMarks);
     this.heroSprite = sprites ? new Sprite() : null;
     if (this.heroSprite) {
       this.heroSprite.anchor.set(0.5, 1); // 발 가운데 기준(16×16 그림, 충돌 상자 10×14)
@@ -233,6 +235,23 @@ export class GrayboxRenderer {
     }
   }
 
+  /** F29 개발 모드: 레벨 점검 경고 자리를 표시한다(빈 배열이면 지운다). 구멍은 발판 끝 칸, 철자는 코인 칸. */
+  setLevelMarks(marks: readonly { kind: 'pit' | 'letter'; x: number; y: number }[]): void {
+    const g = this.levelMarks;
+    g.clear();
+    for (const m of marks) {
+      g.rect(
+        m.x,
+        m.y - (m.kind === 'pit' ? TILE : 0),
+        TILE,
+        m.kind === 'pit' ? TILE * 2 : TILE,
+      ).stroke({
+        width: 1,
+        color: 0xff3b3b,
+      });
+    }
+  }
+
   /** alpha: 직전 스텝과 지금 스텝 사이 보간 비율(고주사율 화면에서 부드럽게). */
   render(world: World, alpha: number, reducedMotion = false): void {
     // 애니메이션 박자는 게임 진행 시간(1/60초 단위)으로 센다. 120Hz 화면에서 두 배로 빨라지거나
@@ -245,6 +264,7 @@ export class GrayboxRenderer {
     if (!this.propsDrawn) {
       this.drawProps(world);
       this.propsDrawn = true;
+      this.level.addChild(this.levelMarks); // 코인·철자 위에 보이게 맨 위로
     }
     const coinTex = this.sprites ? this.frameOf(this.sprites.coin, 'spin') : undefined;
     this.coinSprites.forEach((s, i) => {

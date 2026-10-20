@@ -8,10 +8,12 @@ export const FAIL_OPTIONS = [0, 0.5, 1] as const;
 export interface DevSettings {
   delayMs: (typeof DELAY_OPTIONS)[number];
   failRate: (typeof FAIL_OPTIONS)[number];
+  /** F29: 레벨 점검 경고 자리를 게임 화면에 빨간 테두리로 표시. */
+  showLevelMarks: boolean;
 }
 
 const KEY = 'verb-jump:dev';
-const DEFAULT: DevSettings = { delayMs: 0, failRate: 0 };
+const DEFAULT: DevSettings = { delayMs: 0, failRate: 0, showLevelMarks: true };
 
 function load(): DevSettings {
   const v = readJson(KEY);
@@ -19,7 +21,8 @@ function load(): DevSettings {
   const o = v as Record<string, unknown>;
   const delayMs = DELAY_OPTIONS.find((d) => d === o.delayMs) ?? 0;
   const failRate = FAIL_OPTIONS.find((f) => f === o.failRate) ?? 0;
-  return { delayMs, failRate };
+  const showLevelMarks = typeof o.showLevelMarks === 'boolean' ? o.showLevelMarks : true;
+  return { delayMs, failRate, showLevelMarks };
 }
 
 let current: DevSettings = load();
