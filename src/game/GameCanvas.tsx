@@ -136,7 +136,11 @@ export function GameCanvas({
               onVerbMet?.(v);
               // 발음을 읽는 동안 효과음을 줄여 동사 이름이 묻히지 않게 한다
               if (settings.get().speech) {
-                speak(v, { onStart: () => sfx.duck(true), onEnd: () => sfx.duck(false) });
+                speak(v, {
+                  volume: settings.get().speechVolume,
+                  onStart: () => sfx.duck(true),
+                  onEnd: () => sfx.duck(false),
+                });
               }
             },
             onEvent: (e) => {

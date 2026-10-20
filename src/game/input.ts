@@ -25,6 +25,11 @@ const GAME_KEYS = new Set([...LEFT, ...RIGHT, ...JUMP, ...VERB, 'ArrowUp', 'Arro
  * 키보드 상태를 모아 두었다가 게임 루프가 스텝마다 sample()로 가져간다.
  * 한 스텝 사이에 눌렀다 뗀 짧은 탭도 jumpPressed로 놓치지 않는다.
  */
+const isFormField = (t: EventTarget | null) =>
+  typeof HTMLElement !== 'undefined' &&
+  t instanceof HTMLElement &&
+  (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA');
+
 export class KeyboardControls {
   private readonly down = new Set<string>();
   private jumpLatch = false;
@@ -65,6 +70,8 @@ export class KeyboardControls {
   }
 
   private readonly onDown = (e: KeyboardEvent): void => {
+    // 볼륨 슬라이더 같은 입력란에 포커스가 있으면 그 입력란이 키를 쓴다(방향키로 볼륨 조절)
+    if (isFormField(e.target)) return;
     if (GAME_KEYS.has(e.code)) e.preventDefault(); // 스페이스·방향키 스크롤 막기
     if (e.repeat) return;
     this.down.add(e.code);

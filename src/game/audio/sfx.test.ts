@@ -9,7 +9,10 @@ function fakeAudio() {
     state = 'running';
     destination = {};
     createGain() {
-      return { gain: { setTargetAtTime: (v: number) => targets.push(v) }, connect() {} };
+      return {
+        gain: { value: 1, setTargetAtTime: (v: number) => targets.push(v) },
+        connect() {},
+      };
     }
     resume() {
       return Promise.resolve();
@@ -33,6 +36,16 @@ describe('동사 발음을 읽는 동안 효과음 줄이기', () => {
     s.duck(true);
     s.duck(false);
     expect(targets).toEqual([DUCK_LEVEL, 1]);
+  });
+
+  it('사용자 볼륨 위에 줄이기를 곱한다', () => {
+    const targets = fakeAudio();
+    const s = new Sfx();
+    s.unlock();
+    s.setVolume(0.6);
+    s.duck(true);
+    s.duck(false);
+    expect(targets).toEqual([0.6, 0.6 * DUCK_LEVEL, 0.6]);
   });
 
   it('끝 알림이 오지 않아도 정해진 시간 뒤에는 되돌린다', () => {

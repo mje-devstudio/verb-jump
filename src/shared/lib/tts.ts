@@ -6,7 +6,7 @@ let speaking: SpeechSynthesisUtterance | null = null;
 
 export function speak(
   text: string,
-  opts: { lang?: string; onStart?: () => void; onEnd?: () => void } = {},
+  opts: { lang?: string; volume?: number; onStart?: () => void; onEnd?: () => void } = {},
 ): void {
   if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
   const lang = opts.lang ?? 'en-US';
@@ -22,7 +22,7 @@ export function speak(
   speaking = u;
   u.lang = lang;
   u.rate = 0.85; // 한 단어라 조금 천천히, 또박또박
-  u.volume = 1; // 브라우저 TTS의 최대값(더 키울 수 없다)
+  u.volume = Math.min(1, Math.max(0, opts.volume ?? 1)); // 1이 브라우저 TTS의 최대값(더 키울 수 없다)
   const voice = pickVoice(synth.getVoices(), lang);
   if (voice) u.voice = voice;
   if (opts.onEnd) {

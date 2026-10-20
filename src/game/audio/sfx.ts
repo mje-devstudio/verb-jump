@@ -14,6 +14,9 @@ export class Sfx {
   /** 모든 효과음이 지나가는 볼륨. 동사 발음을 읽는 동안 줄인다(duck). */
   private master: GainNode | null = null;
   private duckTimer: ReturnType<typeof setTimeout> | null = null;
+  private ducked = false;
+  /** 사용자가 정한 효과음 볼륨(0~1). */
+  private volume = 1;
   private readonly buffers = new Map<SfxName, AudioBuffer>();
   // F19: 효과음 생성기(jsfxr)는 첫 화면 번들에서 떼고 시작 버튼을 누를 때 받는다
   private synth: typeof import('jsfxr').sfxr | null = null;
@@ -24,6 +27,7 @@ export class Sfx {
     this.ctx ??= new AudioContext();
     if (!this.master) {
       this.master = this.ctx.createGain();
+      this.master.gain.value = this.volume;
       this.master.connect(this.ctx.destination);
     }
     void this.ctx.resume();
@@ -48,11 +52,22 @@ export class Sfx {
    * 끝 알림(onend)이 오지 않는 브라우저가 있어 DUCK_MAX_MS 뒤에는 저절로 돌아온다.
    */
   duck(on: boolean): void {
-    const g = this.master;
-    if (!g || !this.ctx) return;
     if (this.duckTimer) clearTimeout(this.duckTimer);
     this.duckTimer = on ? setTimeout(() => this.duck(false), DUCK_MAX_MS) : null;
-    g.gain.setTargetAtTime(on ? DUCK_LEVEL : 1, this.ctx.currentTime, 0.03);
+    this.ducked = on;
+    this.applyGain();
+  }
+
+  /** 효과음 볼륨(0~1, 설정 화면). 발음을 읽는 중이면 그 위에 DUCK_LEVEL을 곱한다. */
+  setVolume(v: number): void {
+    this.volume = Math.min(1, Math.max(0, v));
+    this.applyGain();
+  }
+
+  private applyGain(): void {
+    if (!this.master || !this.ctx) return;
+    const target = this.volume * (this.ducked ? DUCK_LEVEL : 1);
+    this.master.gain.setTargetAtTime(target, this.ctx.currentTime, 0.03);
   }
 
   play(name: SfxName): void {

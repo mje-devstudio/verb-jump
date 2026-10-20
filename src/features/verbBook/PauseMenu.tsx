@@ -3,11 +3,12 @@ import type { VerbEntry } from '../../game/data/verbs';
 import type { GameSnapshot, GameStore } from '../../game/store';
 import { useGameStore } from '../hud/useGameStore';
 import { VerbBook } from './VerbBook';
+import { VolumeControls } from '../settings/VolumeControls';
 
 const selectPaused = (s: GameSnapshot) => s.paused;
 
 /**
- * 일시정지 메뉴(F17). 계속하기, 동사 도감, 처음 화면으로(그만두기). 게임은 멈춘 채라 천천히 읽어도 된다.
+ * 일시정지 메뉴(F17). 계속하기, 동사 도감, 소리(볼륨), 처음 화면으로(그만두기). 게임은 멈춘 채라 천천히 읽어도 된다.
  * 열리면 계속하기 버튼에 포커스를 둔다(키보드는 Enter로 누른다. Space는 게임 점프 키라 막혀 있다).
  */
 export function PauseMenu({
@@ -42,7 +43,7 @@ function PausePanel({
   onResume: () => void;
   onQuit: () => void;
 }) {
-  const [view, setView] = useState<'menu' | 'book' | 'quit'>('menu');
+  const [view, setView] = useState<'menu' | 'book' | 'sound' | 'quit'>('menu');
   const resumeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     resumeRef.current?.focus();
@@ -62,7 +63,7 @@ function PausePanel({
             </span>
           )}
         </p>
-        <div className="mt-3 flex justify-center gap-2">
+        <div className="mt-3 flex flex-wrap justify-center gap-2">
           <button
             ref={resumeRef}
             type="button"
@@ -78,6 +79,14 @@ function PausePanel({
             className="min-h-11 rounded border border-muted px-4 aria-pressed:bg-white/15"
           >
             동사 도감
+          </button>
+          <button
+            type="button"
+            aria-pressed={view === 'sound'}
+            onClick={() => setView(view === 'sound' ? 'menu' : 'sound')}
+            className="min-h-11 rounded border border-muted px-4 aria-pressed:bg-white/15"
+          >
+            소리
           </button>
           <button
             type="button"
@@ -112,6 +121,11 @@ function PausePanel({
                 아니요
               </button>
             </div>
+          </div>
+        )}
+        {view === 'sound' && (
+          <div className="mt-3 flex justify-center">
+            <VolumeControls />
           </div>
         )}
         {view === 'book' && (

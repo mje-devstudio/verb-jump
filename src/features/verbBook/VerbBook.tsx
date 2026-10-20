@@ -2,6 +2,7 @@ import { ABILITIES } from '../../game/abilities/registry';
 import type { VerbEntry } from '../../game/data/verbs';
 import { speak } from '../../shared/lib/tts';
 import { useMetVerbs } from './metVerbs';
+import { settings } from '../settings/settings';
 
 /**
  * F17 동사 도감. 스테이지 동사를 데이터 순서로 보여 주고, 만난 동사는 뜻·발음·예문을 다시 본다.
@@ -46,7 +47,7 @@ export function VerbBook({ verbs }: { verbs: Readonly<Record<string, VerbEntry>>
                 </p>
                 <button
                   type="button"
-                  onClick={() => speak(verb)}
+                  onClick={() => speak(verb, { volume: settings.get().speechVolume })}
                   aria-label={`${verb} 발음 듣기`}
                   className="min-h-11 min-w-11 rounded border border-muted px-2 text-sm hover:bg-white/10"
                 >

@@ -68,7 +68,7 @@ describe('F17 일시정지 메뉴와 동사 도감', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: '동사 도감' }));
     fireEvent.click(screen.getByRole('button', { name: 'climb 발음 듣기' }));
-    expect(speak).toHaveBeenCalledWith('climb');
+    expect(speak).toHaveBeenCalledWith('climb', { volume: 1 });
   });
 
   it('처음 화면으로는 한 번 더 묻고, 그만두기를 눌러야 나간다', () => {
@@ -82,6 +82,14 @@ describe('F17 일시정지 메뉴와 동사 도감', () => {
     fireEvent.click(screen.getByRole('button', { name: '처음 화면으로' }));
     fireEvent.click(screen.getByRole('button', { name: '그만두기' }));
     expect(onQuit).toHaveBeenCalledOnce();
+  });
+
+  it('소리를 누르면 볼륨 조절이 나온다', () => {
+    const { store } = setup();
+    act(() => store.update({ paused: true }));
+    fireEvent.click(screen.getByRole('button', { name: '소리' }));
+    expect(screen.getByLabelText('발음 볼륨')).toBeTruthy();
+    expect(screen.getByLabelText('효과음 볼륨')).toBeTruthy();
   });
 
   it('다시 멈추면 도감이 닫힌 메뉴부터 보인다', () => {
