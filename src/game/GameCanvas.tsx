@@ -42,6 +42,7 @@ export function GameCanvas({
   touchInput,
   mobile = false,
   onReady,
+  onVerbMet,
 }: {
   /** 스테이지 API(F01)로 받아 둔 레벨. 이 컴포넌트는 그리기·루프만 맡는다. */
   level: LevelDef;
@@ -53,6 +54,8 @@ export function GameCanvas({
   mobile?: boolean;
   /** 게임 루프가 준비되어 controllerRef를 쓸 수 있게 된 뒤 한 번. */
   onReady?: () => void;
+  /** 동사를 얻거나 철자 단어를 완성했을 때(F17 동사 도감 기록). 판이 도는 동안 바뀌지 않는 함수를 넘긴다. */
+  onVerbMet?: (verb: string) => void;
 }) {
   const hostRef = useRef<HTMLDivElement>(null);
   // 콜백이 렌더마다 바뀌어도 게임(루프·렌더러)을 다시 만들지 않도록 최신 값만 ref로 읽는다
@@ -130,6 +133,7 @@ export function GameCanvas({
           syncHud(world, store, {
             nextCardId: () => ++cardId,
             onVerbGained: (v) => {
+              onVerbMet?.(v);
               if (settings.get().speech) speak(v);
             },
             onEvent: (e) => {
@@ -205,7 +209,7 @@ export function GameCanvas({
       disposed = true;
       cleanup();
     };
-  }, [level, store, controllerRef, touchInput, mobile]);
+  }, [level, store, controllerRef, touchInput, mobile, onVerbMet]);
 
   return (
     <div
