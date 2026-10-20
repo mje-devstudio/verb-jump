@@ -171,6 +171,18 @@ describe('F04 일시정지 사유와 탭 이탈', () => {
     expect(paused.at(-1)).toBe(false);
   });
 
+  it('모든 사유가 풀려 다시 돌 때만 onResume을 한 번 부른다', () => {
+    let resumed = 0;
+    const gate = new PauseGate({ setPaused: () => {} }, () => resumed++);
+    gate.set('portrait', false); // 멈춘 적 없음
+    gate.set('user', true);
+    gate.set('portrait', true);
+    gate.set('user', false); // 아직 세로 화면
+    expect(resumed).toBe(0);
+    gate.set('portrait', false);
+    expect(resumed).toBe(1);
+  });
+
   it('탭을 벗어나면 바로 멈추고, 돌아오면 3초 뒤 다시 돈다', () => {
     vi.useFakeTimers();
     const states: string[] = [];

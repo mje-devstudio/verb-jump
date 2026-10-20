@@ -115,12 +115,19 @@ export type PauseReason = 'user' | 'hidden' | 'portrait';
 export class PauseGate {
   private readonly reasons = new Set<PauseReason>();
 
-  constructor(private readonly driver: Pick<LoopDriver, 'setPaused'>) {}
+  constructor(
+    private readonly driver: Pick<LoopDriver, 'setPaused'>,
+    /** 멈췄다가 다시 돌기 시작할 때 한 번(일시정지 중 누른 입력 버리기 등). */
+    private readonly onResume?: () => void,
+  ) {}
 
   set(reason: PauseReason, on: boolean): void {
+    const wasPaused = this.reasons.size > 0;
     if (on) this.reasons.add(reason);
     else this.reasons.delete(reason);
-    this.driver.setPaused(this.reasons.size > 0);
+    const paused = this.reasons.size > 0;
+    this.driver.setPaused(paused);
+    if (wasPaused && !paused) this.onResume?.();
   }
 
   has(reason: PauseReason): boolean {

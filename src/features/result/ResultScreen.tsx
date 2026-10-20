@@ -50,6 +50,7 @@ export function ResultScreen({
           {newBest && <p className="text-sm text-ok">이 기기 최고 기록!</p>}
         </div>
         <p
+          role="img"
           aria-label={score.onTime ? '정시 도장' : '지각 도장'}
           className={`-rotate-12 rounded-full border-4 px-3 py-1 text-xl font-black ${
             score.onTime ? 'border-ok text-ok' : 'border-late text-late'

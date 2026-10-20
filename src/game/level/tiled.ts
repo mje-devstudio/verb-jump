@@ -150,7 +150,7 @@ export function parseTiledMap(raw: Json, verbs: Readonly<Record<string, VerbEntr
         break;
       case 'enemy': {
         const verb = prop(ob, 'verb');
-        if (verb === null || !(verb in verbs)) {
+        if (verb === null || !Object.hasOwn(verbs, verb)) {
           throw new MapFormatError(
             `적(${col},${row})의 verb 속성이 없거나 동사 데이터에 없습니다: ${verb}`,
           );

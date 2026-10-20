@@ -53,6 +53,24 @@ describe('F10 터치 입력', () => {
     expect(t.sample()).toMatchObject({ verbHeld: true });
   });
 
+  it('같은 버튼을 두 손가락으로 누르면 둘 다 떼야 놓인다(리뷰 9)', () => {
+    const t = new TouchInput();
+    t.jumpDown(1);
+    t.jumpDown(2);
+    expect(t.sample()).toMatchObject({ jumpHeld: true, jumpPressed: true });
+    t.up(2);
+    expect(t.sample()).toMatchObject({ jumpHeld: true, jumpPressed: false });
+    t.up(1);
+    expect(t.sample().jumpHeld).toBe(false);
+  });
+
+  it('clearLatches는 눌렀던 기록만 버리고 누르고 있는 것은 그대로', () => {
+    const t = new TouchInput();
+    t.verbDown(1);
+    t.clearLatches();
+    expect(t.sample()).toMatchObject({ verbHeld: true, verbPressed: false });
+  });
+
   it('동사 버튼이 사라지면 누르던 것을 놓는다', () => {
     const t = new TouchInput();
     t.verbDown(5);

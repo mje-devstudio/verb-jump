@@ -46,6 +46,19 @@ describe('F10 모바일 조작 화면', () => {
     expect(input.sample()).toMatchObject({ verbHeld: false });
   });
 
+  it('탭 이탈·세로 화면으로 입력이 초기화되면 버튼 눌림 표시와 패드도 풀린다(리뷰 8)', () => {
+    const { input } = setup();
+    const zone = screen.getByTestId('move-zone');
+    fireEvent.pointerDown(zone, { pointerId: 1, clientX: 100 });
+    const jump = screen.getByRole('button', { name: '점프' });
+    fireEvent.pointerDown(jump, { pointerId: 2 });
+    expect(jump.getAttribute('aria-pressed')).toBe('true');
+    act(() => input.reset());
+    expect(jump.getAttribute('aria-pressed')).toBe('false');
+    const pad = zone.firstElementChild as HTMLElement;
+    expect(pad.style.display).toBe('none');
+  });
+
   it('길게 누르기 메뉴를 막는다', () => {
     setup();
     const zone = screen.getByTestId('move-zone');

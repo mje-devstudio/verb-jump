@@ -5,6 +5,8 @@ import { useGameStore } from './useGameStore';
  * 게임 HUD(F09). 항목마다 자기 값만 구독해서, 시계가 1초마다 바뀌어도 코인·생명은 다시 그려지지 않는다.
  * selector는 모듈 최상위 상수로 두어 렌더마다 새 함수가 생기지 않게 한다.
  */
+// 이름(aria-label)으로 읽히는 HUD 값은 role="img"를 붙인다. 역할 없는 span의 aria-label은 ARIA에서 허용되지 않아
+// 일부 스크린 리더가 읽지 않는다(리뷰 13).
 const sel = {
   lives: (s: GameSnapshot) => s.lives,
   coins: (s: GameSnapshot) => s.coins,
@@ -19,7 +21,7 @@ const sel = {
 export function Lives({ store }: { store: GameStore }) {
   const lives = useGameStore(store, sel.lives);
   return (
-    <span aria-label={`생명 ${lives}개`} className="tracking-widest">
+    <span role="img" aria-label={`생명 ${lives}개`} className="tracking-widest">
       {'♥'.repeat(lives)}
     </span>
   );
@@ -27,14 +29,22 @@ export function Lives({ store }: { store: GameStore }) {
 
 export function Coins({ store }: { store: GameStore }) {
   const coins = useGameStore(store, sel.coins);
-  return <span aria-label={`코인 ${coins}개`}>● {coins}</span>;
+  return (
+    <span role="img" aria-label={`코인 ${coins}개`}>
+      ● {coins}
+    </span>
+  );
 }
 
 export function Spell({ store }: { store: GameStore }) {
   const spell = useGameStore(store, sel.spell);
   if (!spell) return null;
   return (
-    <span aria-label={`철자 ${spell.replaceAll(' ', '')}`} className="font-mono text-accent">
+    <span
+      role="img"
+      aria-label={`철자 ${spell.replaceAll(' ', '')}`}
+      className="font-mono text-accent"
+    >
       {spell}
     </span>
   );
@@ -44,7 +54,11 @@ export function Clock({ store }: { store: GameStore }) {
   const clock = useGameStore(store, sel.clock);
   const late = useGameStore(store, sel.late);
   return (
-    <span className={`font-mono ${late ? 'text-late' : ''}`} aria-label={`지금 ${clock}`}>
+    <span
+      role="img"
+      className={`font-mono ${late ? 'text-late' : ''}`}
+      aria-label={`지금 ${clock}${late ? ' 지각' : ''}`}
+    >
       {clock}
       {late && ' 지각'}
     </span>
@@ -82,7 +96,7 @@ export function PauseButton({ store, onToggle }: { store: GameStore; onToggle: (
   );
 }
 
-export function PausedOverlay({ store }: { store: GameStore }) {
+export function PausedOverlay({ store, touch = false }: { store: GameStore; touch?: boolean }) {
   const paused = useGameStore(store, sel.paused);
   if (!paused) return null;
   return (
@@ -90,7 +104,14 @@ export function PausedOverlay({ store }: { store: GameStore }) {
       role="status"
       className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-md bg-panel/90 px-6 py-3 text-lg"
     >
-      일시정지 · <kbd className="text-sm">Esc</kbd>로 계속
+      {/* 터치 기기에는 Esc가 없다(리뷰 13) */}
+      {touch ? (
+        <>일시정지 · 위의 계속 버튼을 누르세요</>
+      ) : (
+        <>
+          일시정지 · <kbd className="text-sm">Esc</kbd>로 계속
+        </>
+      )}
     </div>
   );
 }

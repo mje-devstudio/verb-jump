@@ -67,119 +67,131 @@ export function GameCanvas({
     const host = hostRef.current;
     if (!host) return;
     let disposed = false;
-    let cleanup: (() => void) | null = null;
+    // 초기화 도중 만든 것을 거꾸로 정리한다. 중간에 예외가 나도 그때까지 만든 것만 정리한다(리뷰 5)
+    const disposers: (() => void)[] = [];
+    const cleanup = () => {
+      for (const d of disposers.splice(0).reverse()) d();
+    };
 
-    const rendererReady = GrayboxRenderer.create();
-    rendererReady.then(
+    GrayboxRenderer.create().then(
       (renderer) => {
         if (disposed) {
           renderer.destroy(); // StrictMode 이중 마운트·빠른 이탈: 초기화가 끝난 뒤 정리
           return;
         }
-        const world = createWorld(level);
-        // 개발 모드에서만 콘솔·자동 점검용으로 world를 노출한다(배포 빌드에서는 제거됨).
-        if (import.meta.env.DEV) {
-          Object.assign(window, {
-            __verbJumpWorld: world,
-            // 대표 이미지 캡처용: 같은 작업 안에서 그리고 바로 읽어야 WebGL 버퍼가 비워지기 전에 복사된다
-            // 대표 이미지 저장(개발 전용): 같은 작업 안에서 그리고 바로 복사해야 WebGL 버퍼가 비워지기 전에 읽힌다
-            __verbJumpSaveOg: async () => {
-              const { saveOgImage } = await import('../dev/ogCapture');
-              renderer.render(world, 1, true);
-              const snap = document.createElement('canvas');
-              snap.width = renderer.canvas.width;
-              snap.height = renderer.canvas.height;
-              snap.getContext('2d')?.drawImage(renderer.canvas, 0, 0);
-              return saveOgImage(snap);
-            },
-          });
+        disposers.push(() => renderer.destroy());
+        try {
+          start(renderer, host);
+        } catch (error) {
+          // then의 성공 콜백 안 예외는 실패 콜백으로 가지 않는다. 정리하고 에러 바운더리로 보낸다
+          cleanup();
+          setCrash({ error });
         }
-        const controls = new KeyboardControls();
-        const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-        let cardId = 0;
-        const tuning = mobile ? mobileTuning() : DEFAULT_TUNING;
-        const worldOpts = mobile ? { stompWidthMul: MOBILE_STOMP_WIDTH_MUL } : {};
-        const sample = () =>
-          touchInput ? mergeControls(controls.sample(), touchInput.sample()) : controls.sample();
-        const loop = new FixedStepLoop(() => stepWorld(world, sample(), tuning, STEP_S, worldOpts));
-        const driver = new LoopDriver(
-          loop,
-          (alpha) => {
-            syncHud(world, store, {
-              nextCardId: () => ++cardId,
-              onVerbGained: (v) => {
-                if (settings.get().speech) speak(v);
-              },
-              onEvent: (e) => {
-                const name = soundFor(e);
-                if (name && settings.get().sfx) sfx.play(name);
-              },
-            });
-            renderer.render(world, alpha, reducedMotion.matches);
-          },
-          undefined,
-          (error) => setCrash({ error }),
-        );
-        const gate = new PauseGate(driver);
-        const togglePause = () => {
-          if (world.cleared) return;
-          const on = !gate.has('user');
-          gate.set('user', on);
-          store.update({ paused: on });
-        };
-        const setPortraitBlocked = (on: boolean) => {
-          gate.set('portrait', on);
-          touchInput?.reset();
-        };
-        if (controllerRef) controllerRef.current = { togglePause, setPortraitBlocked };
-        const onKey = (e: KeyboardEvent) => {
-          if (e.code === 'Escape' && !e.repeat) togglePause();
-        };
-        window.addEventListener('keydown', onKey);
-
-        host.appendChild(renderer.canvas);
-        const fit = () => {
-          const k = integerScale(host.clientWidth, host.clientHeight);
-          renderer.canvas.style.width = `${VIEW_W * k}px`;
-          renderer.canvas.style.height = `${VIEW_H * k}px`;
-        };
-        fit();
-        const resizeObserver = new ResizeObserver(fit);
-        resizeObserver.observe(host);
-        const stopVisibility = pauseOnHidden(gate, {
-          onChange: (s) => {
-            if (s === 'hidden') touchInput?.reset(); // 떠나 있는 동안 뗀 손가락은 이벤트가 안 온다
-            setRunState(s);
-          },
-        });
-        driver.start();
-        setRunState('running');
-        onReadyRef.current?.();
-
-        cleanup = () => {
-          window.removeEventListener('keydown', onKey);
-          if (controllerRef) controllerRef.current = null;
-          driver.stop();
-          stopVisibility();
-          resizeObserver.disconnect();
-          controls.dispose();
-          renderer.destroy();
-        };
       },
       (err: unknown) => {
+        // 렌더러를 만들지 못했다(WebGL 미지원 등). 만들어진 것이 없으니 정리할 것도 없다
         console.error(err);
-        // 렌더러는 만들어졌을 수 있으니 정리한다
-        void rendererReady.then(
-          (r) => r.destroy(),
-          () => {},
-        );
         if (!disposed) setRunState('error');
       },
     );
 
+    function start(renderer: GrayboxRenderer, host: HTMLDivElement) {
+      const world = createWorld(level);
+      // 개발 모드에서만 콘솔·자동 점검용으로 world를 노출한다(배포 빌드에서는 제거됨).
+      if (import.meta.env.DEV) {
+        Object.assign(window, {
+          __verbJumpWorld: world,
+          // 대표 이미지 저장(개발 전용): 같은 작업 안에서 그리고 바로 복사해야 WebGL 버퍼가 비워지기 전에 읽힌다
+          __verbJumpSaveOg: async () => {
+            const { saveOgImage } = await import('../dev/ogCapture');
+            renderer.render(world, 1, true);
+            const snap = document.createElement('canvas');
+            snap.width = renderer.canvas.width;
+            snap.height = renderer.canvas.height;
+            snap.getContext('2d')?.drawImage(renderer.canvas, 0, 0);
+            return saveOgImage(snap);
+          },
+        });
+      }
+      const controls = new KeyboardControls();
+      disposers.push(() => controls.dispose());
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      let cardId = 0;
+      const tuning = mobile ? mobileTuning() : DEFAULT_TUNING;
+      const worldOpts = mobile ? { stompWidthMul: MOBILE_STOMP_WIDTH_MUL } : {};
+      const sample = () =>
+        touchInput ? mergeControls(controls.sample(), touchInput.sample()) : controls.sample();
+      const loop = new FixedStepLoop(() => stepWorld(world, sample(), tuning, STEP_S, worldOpts));
+      const driver = new LoopDriver(
+        loop,
+        (alpha) => {
+          syncHud(world, store, {
+            nextCardId: () => ++cardId,
+            onVerbGained: (v) => {
+              if (settings.get().speech) speak(v);
+            },
+            onEvent: (e) => {
+              const name = soundFor(e);
+              if (name && settings.get().sfx) sfx.play(name);
+            },
+          });
+          renderer.render(world, alpha, reducedMotion.matches);
+        },
+        undefined,
+        (error) => setCrash({ error }),
+      );
+      // 일시정지 중 누른 점프·동사는 재개 순간 나가지 않게 버린다(리뷰 6: sleep이면 시계 벌칙)
+      const gate = new PauseGate(driver, () => {
+        controls.clearLatches();
+        touchInput?.clearLatches();
+        sfx.resume();
+      });
+      const togglePause = () => {
+        if (world.cleared) return;
+        const on = !gate.has('user');
+        gate.set('user', on);
+        store.update({ paused: on });
+      };
+      const setPortraitBlocked = (on: boolean) => {
+        gate.set('portrait', on);
+        touchInput?.reset();
+      };
+      if (controllerRef) {
+        controllerRef.current = { togglePause, setPortraitBlocked };
+        disposers.push(() => (controllerRef.current = null));
+      }
+      const onKey = (e: KeyboardEvent) => {
+        if (e.code === 'Escape' && !e.repeat) togglePause();
+      };
+      window.addEventListener('keydown', onKey);
+      disposers.push(() => window.removeEventListener('keydown', onKey));
+
+      host.appendChild(renderer.canvas);
+      const fit = () => {
+        const k = integerScale(host.clientWidth, host.clientHeight);
+        renderer.canvas.style.width = `${VIEW_W * k}px`;
+        renderer.canvas.style.height = `${VIEW_H * k}px`;
+      };
+      fit();
+      const resizeObserver = new ResizeObserver(fit);
+      resizeObserver.observe(host);
+      disposers.push(() => resizeObserver.disconnect());
+      const stopVisibility = pauseOnHidden(gate, {
+        onChange: (s) => {
+          if (s === 'hidden') touchInput?.reset(); // 떠나 있는 동안 뗀 손가락은 이벤트가 안 온다
+          setRunState(s);
+        },
+      });
+      disposers.push(stopVisibility);
+      driver.start();
+      disposers.push(() => driver.stop());
+      setRunState('running');
+      onReadyRef.current?.();
+    }
+
     return () => {
       disposed = true;
-      cleanup?.();
+      cleanup();
     };
   }, [level, store, controllerRef, touchInput, mobile]);
 

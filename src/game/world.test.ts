@@ -49,6 +49,24 @@ describe('F06 밟기와 동사 얻기', () => {
     });
   });
 
+  it('겹친 두 적을 위에서 밟으면 하나의 동사만 얻고 피격되지 않는다(리뷰 1)', () => {
+    const w = createWorld(
+      lvl([
+        { verb: 'climb', col: 3, row: 5 },
+        { verb: 'sleep', col: 3, row: 5 },
+      ]),
+    );
+    const e = enemy(w);
+    w.player.x = e.x + 1;
+    w.player.y = e.y - 30;
+    run(w, 30, {});
+    const events = drainEvents(w);
+    // 처음 밟은 climb을 얻고, 튀어 오른 뒤 다시 떨어져 sleep을 밟을 수는 있지만 피격은 없다
+    expect(events.find((ev) => ev.type === 'verb_gained')).toMatchObject({ verb: 'climb' });
+    expect(events.map((ev) => ev.type)).not.toContain('hurt');
+    expect(w.lives).toBe(3);
+  });
+
   it('옆에 닿으면 피격: 1초 무적 동안은 다시 맞지 않는다', () => {
     const w = createWorld(lvl([{ verb: 'sleep', col: 8, row: 5 }]));
     run(w, 10, {});

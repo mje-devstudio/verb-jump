@@ -235,7 +235,9 @@ export class GrayboxRenderer {
 
   /** alpha: 직전 스텝과 지금 스텝 사이 보간 비율(고주사율 화면에서 부드럽게). */
   render(world: World, alpha: number, reducedMotion = false): void {
-    this.frame++;
+    // 애니메이션 박자는 게임 진행 시간(1/60초 단위)으로 센다. 120Hz 화면에서 두 배로 빨라지거나
+    // 일시정지 중에 움직이지 않는다(리뷰 12)
+    this.frame = Math.floor((world.elapsedMs * 60) / 1000);
     if (world.mapVersion !== this.mapVersion) {
       this.drawTiles(world.map);
       this.mapVersion = world.mapVersion;

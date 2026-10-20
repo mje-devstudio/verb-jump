@@ -17,18 +17,6 @@ export function TouchControls({ input, store }: { input: TouchInput; store: Game
   const [jumpDown, setJumpDown] = useState(false);
   const [verbDown, setVerbDown] = useState(false);
 
-  // 능력을 잃어 동사 버튼이 사라지면 누르던 것을 놓는다
-  useEffect(() => {
-    if (!verb) input.releaseVerb();
-  }, [verb, input]);
-
-  // iOS Safari 핀치 확대 막기(touch-action만으로는 막히지 않는다)
-  useEffect(() => {
-    const stop = (e: Event) => e.preventDefault();
-    document.addEventListener('gesturestart', stop);
-    return () => document.removeEventListener('gesturestart', stop);
-  }, []);
-
   const drawPad = () => {
     const view = input.padView();
     const pad = padRef.current;
@@ -42,6 +30,31 @@ export function TouchControls({ input, store }: { input: TouchInput; store: Game
     knob.style.transform = `translate(calc(-50% + ${dx}px), -50%)`;
     knob.dataset.active = String(Math.abs(dx) > PAD_DEADZONE_PX);
   };
+
+  // 눌림 표시는 입력 상태를 그대로 따른다. 탭 이탈·세로 화면으로 reset()되면 버튼·패드도 함께 풀린다(리뷰 8)
+  useEffect(() => {
+    const sync = () => {
+      setJumpDown(input.jumpHeld);
+      setVerbDown(input.verbHeld);
+      drawPad();
+    };
+    sync();
+    return input.subscribe(sync);
+    // drawPad는 ref만 읽는다
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [input]);
+
+  // 능력을 잃어 동사 버튼이 사라지면 누르던 것을 놓는다
+  useEffect(() => {
+    if (!verb) input.releaseVerb();
+  }, [verb, input]);
+
+  // iOS Safari 핀치 확대 막기(touch-action만으로는 막히지 않는다)
+  useEffect(() => {
+    const stop = (e: Event) => e.preventDefault();
+    document.addEventListener('gesturestart', stop);
+    return () => document.removeEventListener('gesturestart', stop);
+  }, []);
 
   const capture = (e: PointerEvent<HTMLElement>) => {
     e.preventDefault();
@@ -61,19 +74,15 @@ export function TouchControls({ input, store }: { input: TouchInput; store: Game
         onPointerDown={(e) => {
           capture(e);
           input.padDown(e.pointerId, e.clientX);
-          drawPad();
         }}
         onPointerMove={(e) => {
           input.move(e.pointerId, e.clientX);
-          drawPad();
         }}
         onPointerUp={(e) => {
           input.up(e.pointerId);
-          drawPad();
         }}
         onPointerCancel={(e) => {
           input.up(e.pointerId);
-          drawPad();
         }}
       >
         <div
@@ -98,15 +107,12 @@ export function TouchControls({ input, store }: { input: TouchInput; store: Game
             onPointerDown={(e) => {
               capture(e);
               input.verbDown(e.pointerId);
-              setVerbDown(true);
             }}
             onPointerUp={(e) => {
               input.up(e.pointerId);
-              setVerbDown(false);
             }}
             onPointerCancel={(e) => {
               input.up(e.pointerId);
-              setVerbDown(false);
             }}
           >
             {verb}
@@ -120,15 +126,12 @@ export function TouchControls({ input, store }: { input: TouchInput; store: Game
           onPointerDown={(e) => {
             capture(e);
             input.jumpDown(e.pointerId);
-            setJumpDown(true);
           }}
           onPointerUp={(e) => {
             input.up(e.pointerId);
-            setJumpDown(false);
           }}
           onPointerCancel={(e) => {
             input.up(e.pointerId);
-            setJumpDown(false);
           }}
         >
           점프

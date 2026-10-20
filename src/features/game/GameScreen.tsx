@@ -28,6 +28,8 @@ export function GameScreen({
   const [store] = useState(createGameStore);
   const [touchInput] = useState(() => new TouchInput());
   const touch = useTouchMode();
+  // 판정 완화(모바일)는 판을 시작할 때 한 번 정한다. 판 도중 바뀌면 게임이 새로 만들어져 진행이 사라진다(리뷰 4)
+  const [mobile] = useState(touch);
   const portrait = useMediaQuery('(orientation: portrait)');
   const blocked = touch && portrait;
   const controllerRef = useRef<GameController | null>(null);
@@ -57,11 +59,12 @@ export function GameScreen({
           level={level}
           store={store}
           controllerRef={controllerRef}
-          {...(touch ? { touchInput, mobile: true } : {})}
+          touchInput={touchInput}
+          mobile={mobile}
           onReady={() => controllerRef.current?.setPortraitBlocked(blocked)}
         />
         <WordCard store={store} />
-        <PausedOverlay store={store} />
+        <PausedOverlay store={store} touch={touch} />
         <ClearBanner store={store} />
         {touch && <TouchControls input={touchInput} store={store} />}
         {blocked && <RotateNotice />}

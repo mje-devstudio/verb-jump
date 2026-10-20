@@ -9,7 +9,6 @@ export class Sfx {
   private readonly buffers = new Map<SfxName, AudioBuffer>();
   // F19: 효과음 생성기(jsfxr)는 첫 화면 번들에서 떼고 시작 버튼을 누를 때 받는다
   private synth: typeof import('jsfxr').sfxr | null = null;
-  enabled = true;
 
   /** 시작 버튼(첫 사용자 동작)에서 부른다. */
   unlock(): void {
@@ -26,8 +25,13 @@ export class Sfx {
     }
   }
 
+  /** 탭·앱을 다녀오면 iOS는 소리를 멈춘다(suspended·interrupted). 게임이 다시 돌 때 부른다(리뷰 10). */
+  resume(): void {
+    if (this.ctx && this.ctx.state !== 'running') void this.ctx.resume().catch(() => {});
+  }
+
   play(name: SfxName): void {
-    if (!this.enabled || !this.ctx || this.ctx.state !== 'running') return;
+    if (!this.ctx || this.ctx.state !== 'running') return;
     let buf = this.buffers.get(name);
     if (!buf) {
       if (!this.synth) return; // 아직 받는 중

@@ -274,6 +274,8 @@ function respawnAtCheckpoint(w: World): void {
   w.invincibleMs = 0;
   w.hurtStunMs = 0;
   w.spilled.length = 0;
+  // 동사는 그대로 두고 능력 안의 상태(졸기·춤 남은 시간, 벽 타기 중)만 새로 시작한다(리뷰 7)
+  if (w.ability) w.ability = ABILITIES[w.ability.id].create();
   // PRD: 동사 적은 같은 자리에 다시 생긴다.
   for (const e of w.enemies) resetEnemy(e);
 }
@@ -319,6 +321,8 @@ export function stepWorld(
   w.hurtStunMs = Math.max(0, w.hurtStunMs - dt * 1000);
 
   // 3) 적과 밟기·피격
+  // 한 스텝에 밟기는 한 번: 밟으면 튀어 올라(vy<0) 겹쳐 있던 다음 적이 '옆에 닿음'으로 판정되는 일을 막는다(리뷰 1)
+  let stomped = false;
   for (const e of w.enemies) {
     if (!e.alive) {
       e.respawnInMs = Math.max(0, e.respawnInMs - dt * 1000);
@@ -335,6 +339,7 @@ export function stepWorld(
       e.graceMs = Math.max(0, e.graceMs - dt * 1000);
       continue;
     }
+    if (stomped) continue;
     const contact = judgeContact(
       w.player,
       prevBottom,
@@ -348,6 +353,7 @@ export function stepWorld(
       e.respawnInMs = ENEMY_RESPAWN_MS;
       w.player.vy = -tuning.jumpVel * STOMP_BOUNCE;
       w.player.onGround = false;
+      stomped = true;
       gainVerb(w, e.verb, ctx);
     } else if (contact === 'hurt' && w.invincibleMs <= 0) {
       w.invincibleMs = HURT_INVINCIBLE_MS;

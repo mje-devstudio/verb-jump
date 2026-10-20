@@ -57,9 +57,11 @@ describe('F09 HUD 동기화', () => {
     act(() =>
       store.update({ lives: 4, coins: 12, spell: 'B _ E _ K', clock: '9:00:01', late: true }),
     );
+    expect(screen.getByRole('img', { name: '생명 4개' })).toBeTruthy();
+    expect(screen.getByRole('img', { name: '지금 9:00:01 지각' })).toBeTruthy();
     expect(screen.getByLabelText('생명 4개')).toBeTruthy();
     expect(screen.getByLabelText('코인 12개')).toBeTruthy();
     expect(screen.getByLabelText('철자 B_E_K')).toBeTruthy();
-    expect(screen.getByLabelText('지금 9:00:01').textContent).toContain('지각');
+    expect(screen.getByLabelText('지금 9:00:01 지각').textContent).toContain('지각');
   });
 });

@@ -3,6 +3,7 @@ import { HURT_INVINCIBLE_MS, SLEEP_CLOCK_PENALTY_MS } from '../shared/rules/abil
 import { formatClock } from '../shared/rules/clock';
 import { LIVES_MAX, SPILL_MAX, SPILL_PICKUP_WINDOW_MS } from '../shared/rules/game';
 import { DEFAULT_TUNING as T, STEP_S, TILE } from '../shared/rules/tuning';
+import { ABILITIES } from './abilities/registry';
 import { COMMUTE_VERBS } from './data/verbs';
 import { NO_CONTROLS, type ControlSnapshot } from './input';
 import { parseAsciiMap } from './level/tilemap';
@@ -128,6 +129,22 @@ describe('F26 코인과 피격 (게임 세계)', () => {
     expect(w.letterGot[0]).toBe(true);
     expect(worldClock(w)).toBeGreaterThan(clockBefore);
     expect(drainEvents(w).map((e) => e.type)).toContain('game_over');
+  });
+
+  it('졸고 있는 중에 게임오버가 나면 다시 시작한 자리에서 바로 움직인다(동사는 유지, 리뷰 7)', () => {
+    const w = createWorld(lvl({ enemies: [{ verb: 'sleep', col: 30, row: 5 }] }));
+    run(w, 10);
+    w.ability = ABILITIES['joke-sleep'].create();
+    w.verb = 'sleep';
+    run(w, 1, { verbPressed: true, verbHeld: true }); // 2초 졸기 시작
+    w.lives = 1;
+    w.coins = 0;
+    hitOnce(w);
+    expect(drainEvents(w).map((e) => e.type)).toContain('game_over');
+    expect(w.verb).toBe('sleep');
+    const x = w.player.x;
+    run(w, 30, { right: true });
+    expect(w.player.x).toBeGreaterThan(x + 5);
   });
 
   it('구멍에 빠지면 생명 -1이고 코인은 그대로다', () => {

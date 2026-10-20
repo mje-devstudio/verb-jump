@@ -51,6 +51,12 @@ export class KeyboardControls {
     return snap;
   }
 
+  /** 일시정지 동안 누른 점프·동사 입력을 버린다(재개 순간 능력이 나가지 않게, 리뷰 6). 누르고 있는 키는 그대로. */
+  clearLatches(): void {
+    this.jumpLatch = false;
+    this.verbLatch = false;
+  }
+
   dispose(): void {
     this.target.removeEventListener('keydown', this.onDown);
     this.target.removeEventListener('keyup', this.onUp);

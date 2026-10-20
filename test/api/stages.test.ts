@@ -23,6 +23,15 @@ describe('F01 GET /api/stages/:id', () => {
     expect(stage.verbs.brake?.ability).toBe('joke-brake');
   });
 
+  it.each(['__proto__', 'constructor', 'toString', 'hasOwnProperty', '%E0%A4%A'])(
+    '404: 객체 기본 속성 이름이나 깨진 인코딩(%s)도 공통 오류 형태',
+    async (id) => {
+      const res = await get(`/api/stages/${id}`);
+      expect(res.status).toBe(404);
+      expect(await res.json()).toMatchObject({ error: { code: 'STAGE_NOT_FOUND' } });
+    },
+  );
+
   it('404: 없는 스테이지는 공통 오류 형태', async () => {
     const res = await get('/api/stages/moon');
     expect(res.status).toBe(404);

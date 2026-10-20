@@ -85,6 +85,11 @@ describe('F08 Tiled 맵 로더', () => {
     ['모르는 오브젝트 type', map([o('spawn', 0, 0), o('gem', 0, 0)]), /알 수 없는 오브젝트/],
     ['동사 데이터에 없는 적', map([o('spawn', 0, 0), o('enemy', 0, 0, { verb: 'jump' })]), /verb/],
     [
+      '객체 기본 속성 이름의 적(리뷰 11)',
+      map([o('spawn', 0, 0), o('enemy', 0, 0, { verb: 'toString' })]),
+      /verb/,
+    ],
+    [
       '외부 타일셋',
       map([o('spawn', 0, 0)], { tilesets: [{ firstgid: 1, source: 'a.tsj' }] }),
       /외부 타일셋/,

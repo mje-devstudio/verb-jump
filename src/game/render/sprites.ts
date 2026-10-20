@@ -129,7 +129,7 @@ export function heroAnimation(s: {
   return Math.abs(s.vx) > 5 ? 'walk' : 'idle';
 }
 
-/** 프레임 번호: 게임 프레임 수로 정한다(별도 타이머 없이 결정적). */
+/** 프레임 번호: 게임 진행 시간을 1/60초 단위로 센 값으로 정한다(별도 타이머 없이 결정적, 화면 주사율과 무관). */
 export function frameIndex(frame: number, count: number, framesPerImage = 9): number {
   return count === 0 ? 0 : Math.floor(frame / framesPerImage) % count;
 }
