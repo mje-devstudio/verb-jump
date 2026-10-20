@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_TUNING } from '../../shared/rules/tuning';
+import { DEFAULT_TUNING, TILE } from '../../shared/rules/tuning';
 import { GRAYBOX_ABILITY_GAPS, GRAYBOX_LEVEL } from './grayboxLevel';
-import { describePit, findEdges, findPitLandings, groundRow, simulateEdgeJump } from './levelCheck';
+import {
+  checkLevel,
+  describePit,
+  findEdges,
+  findPitLandings,
+  groundRow,
+  simulateEdgeJump,
+} from './levelCheck';
 import { parseAsciiMap } from './tilemap';
 
 const flat = (gapAt: number, gapLen: number, cols = 40) => {
@@ -71,5 +78,32 @@ describe('레벨 점검(달려 뛰기 시뮬레이션)', () => {
       (p) => `col ${p.col} row ${p.row} dir ${p.dir}`,
     );
     expect(pits).toEqual([]);
+  });
+});
+
+describe('F29 맵을 불러올 때의 점검 결과(checkLevel)', () => {
+  it('구멍 착지와 닿을 수 없는 철자 코인을 자리와 함께 경고한다', () => {
+    // 8칸(80px) 구멍(달려 뛰어도 못 건넘)과, 땅에서 10칸 위 공중의 철자 코인(점프 최고 높이 약 4칸)
+    const rows = ['#' + ' '.repeat(38) + '#'];
+    for (let r = 1; r < 11; r++)
+      rows.push(r === 10 ? '#P' + ' '.repeat(37) + '#' : (rows[0] ?? ''));
+    rows.push('#'.repeat(10) + ' '.repeat(8) + '#'.repeat(22));
+    const map = parseAsciiMap(rows).map;
+    const warnings = checkLevel(
+      { map, letters: [{ char: 'Q', x: 30 * TILE, y: 0, ability: 'none' }] },
+      DEFAULT_TUNING,
+    );
+    const pits = warnings.filter((w) => w.kind === 'pit');
+    expect(pits.length).toBeGreaterThan(0);
+    expect(pits.every((w) => w.message.includes('구멍'))).toBe(true);
+    expect(pits.some((w) => w.x === 9 * TILE)).toBe(true); // 구멍 왼쪽 끝 칸
+    expect(warnings.filter((w) => w.kind === 'letter')).toEqual([
+      expect.objectContaining({ x: 30 * TILE, y: 0, message: expect.stringContaining('Q') }),
+    ]);
+  });
+
+  it('능력용 틈으로 표시한 구멍은 경고하지 않는다', () => {
+    const map = flat(10, 8);
+    expect(checkLevel({ map, abilityGaps: [[10, 17]] }, DEFAULT_TUNING)).toEqual([]);
   });
 });

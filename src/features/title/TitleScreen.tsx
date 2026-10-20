@@ -2,6 +2,8 @@ import { useEffect } from 'react';
 import type { LevelDef } from '../../game/world';
 import { loadGameFont } from '../../shared/lib/fonts';
 import { preloadGameScreen } from '../game/lazyGameScreen';
+import { devToolsEnabled } from '../devtools/devSettings';
+import { runLevelCheck } from '../devtools/levelWarnings';
 import type { StageData } from '../../shared/stages/types';
 import { loadBest } from '../result/bestRecord';
 import { DotLoadingBar } from '../stage/DotLoadingBar';
@@ -46,6 +48,10 @@ export function TitleScreen({
     void loadGameFont();
     preloadGameScreen().catch(() => {}); // 실패하면 시작할 때 다시 받는다
   }, []);
+  // F29: 개발 모드에서는 맵을 불러오면 레벨 점검을 돌려 경고를 개발자 토글·콘솔에 남긴다
+  useEffect(() => {
+    if (level && devToolsEnabled()) void runLevelCheck(level);
+  }, [level]);
   return (
     <section className="mx-auto flex h-full max-w-md flex-col items-center justify-center gap-6 px-4 text-center">
       <h1 className="text-4xl font-bold tracking-tight">

@@ -63,6 +63,9 @@ export function devApi(): Plugin {
             }
             await send(res, await (handler as Handler)(await toRequest(req)));
           } catch (e) {
+            // 브라우저가 요청을 취소하면(StrictMode 이중 마운트·페이지 이동) 본문 읽기가 'aborted'로 실패한다.
+            // 오류가 아니므로 Vite 오류 화면에 올리지 않는다.
+            if (req.destroyed || res.destroyed) return;
             next(e);
           }
         })();

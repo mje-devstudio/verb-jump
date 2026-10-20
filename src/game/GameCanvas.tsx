@@ -9,6 +9,8 @@ import {
 } from '../shared/rules/tuning';
 import { speak } from '../shared/lib/tts';
 import { settings } from '../features/settings/settings';
+import { devSettings, devToolsEnabled } from '../features/devtools/devSettings';
+import { levelWarnings } from '../features/devtools/levelWarnings';
 import { sfx } from './audio/sfx';
 import { soundFor } from './audio/soundFor';
 import { KeyboardControls } from './input';
@@ -165,6 +167,16 @@ export function GameCanvas({
       };
       window.addEventListener('keydown', onKey);
       disposers.push(() => window.removeEventListener('keydown', onKey));
+
+      // F29 개발 모드: 레벨 점검 경고 자리를 맵 위에 표시(토글로 끄고 켬)
+      if (devToolsEnabled()) {
+        const drawMarks = () =>
+          renderer.setLevelMarks(
+            devSettings.get().showLevelMarks ? levelWarnings.get().warnings : [],
+          );
+        drawMarks();
+        disposers.push(devSettings.subscribe(drawMarks), levelWarnings.subscribe(drawMarks));
+      }
 
       host.appendChild(renderer.canvas);
       const fit = () => {
