@@ -82,7 +82,12 @@ export function App() {
             </p>
           }
         >
-          <LazyGameScreen key={screen.run} level={screen.level} onFinish={finish} />
+          <LazyGameScreen
+            key={screen.run}
+            level={screen.level}
+            onFinish={finish}
+            onQuit={() => dispatch({ type: 'title' })}
+          />
         </Suspense>
       )}
       {screen.name === 'result' && (

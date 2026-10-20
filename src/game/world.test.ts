@@ -67,6 +67,54 @@ describe('F06 밟기와 동사 얻기', () => {
     expect(w.lives).toBe(3);
   });
 
+  describe('통통 연속 밟기', () => {
+    /** 넓은 평지에 적 둘(사이 gap칸), 첫 적 바로 위에서 떨어뜨리고 오른쪽을 누른 채 둔다. */
+    function chain(gap: number, jumpHeld: boolean) {
+      const lines = [...Array(6).fill('#' + ' '.repeat(38) + '#'), '#'.repeat(40)];
+      lines[5] = '#  P' + ' '.repeat(35) + '#';
+      const { map, spawn } = parseAsciiMap(lines);
+      const w = createWorld({
+        map,
+        spawn,
+        checkpoints: [spawn],
+        verbs: COMMUTE_VERBS,
+        enemies: [
+          { verb: 'climb', col: 6, row: 5 },
+          { verb: 'sleep', col: 6 + gap, row: 5 },
+        ],
+      });
+      for (const e of w.enemies) e.dir = -1;
+      const e1 = enemy(w);
+      w.player.x = e1.x + 1;
+      w.player.y = e1.y - 30;
+      w.prev.x = w.player.x;
+      w.prev.y = w.player.y;
+      let topY = Infinity;
+      const types: string[] = [];
+      for (let i = 0; i < 120; i++) {
+        run(w, 1, { right: true, jumpHeld });
+        if (types.includes('verb_gained')) topY = Math.min(topY, w.player.y);
+        types.push(...drainEvents(w).map((e) => e.type));
+      }
+      return { types, topY, w };
+    }
+
+    it('점프를 누른 채 밟으면 높이 튀어 6칸 앞의 적까지 이어 밟는다', () => {
+      const { types, w } = chain(6, true);
+      expect(types.filter((t) => t === 'verb_gained')).toHaveLength(2);
+      expect(types).not.toContain('hurt');
+      expect(w.verb).toBe('sleep');
+    });
+
+    it('누르지 않으면 낮게 튀고(가까운 적은 이어 밟는다), 누르면 더 높이 튄다', () => {
+      const low = chain(4, false);
+      expect(low.types.filter((t) => t === 'verb_gained')).toHaveLength(2);
+      const high = chain(20, true);
+      const lowOnly = chain(20, false);
+      expect(high.topY).toBeLessThan(lowOnly.topY - 15);
+    });
+  });
+
   it('옆에 닿으면 피격: 1초 무적 동안은 다시 맞지 않는다', () => {
     const w = createWorld(lvl([{ verb: 'sleep', col: 8, row: 5 }]));
     run(w, 10, {});

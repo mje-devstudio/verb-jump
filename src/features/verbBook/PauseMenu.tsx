@@ -7,7 +7,7 @@ import { VerbBook } from './VerbBook';
 const selectPaused = (s: GameSnapshot) => s.paused;
 
 /**
- * 일시정지 메뉴(F17). 계속하기와 동사 도감. 게임은 멈춘 채라 천천히 읽어도 된다.
+ * 일시정지 메뉴(F17). 계속하기, 동사 도감, 처음 화면으로(그만두기). 게임은 멈춘 채라 천천히 읽어도 된다.
  * 열리면 계속하기 버튼에 포커스를 둔다(키보드는 Enter로 누른다. Space는 게임 점프 키라 막혀 있다).
  */
 export function PauseMenu({
@@ -15,27 +15,34 @@ export function PauseMenu({
   verbs,
   touch = false,
   onResume,
+  onQuit,
 }: {
   store: GameStore;
   verbs: Readonly<Record<string, VerbEntry>>;
   touch?: boolean;
   onResume: () => void;
+  /** 이번 판을 그만두고 처음 화면(타이틀)으로. */
+  onQuit: () => void;
 }) {
   const paused = useGameStore(store, selectPaused);
   // 멈출 때마다 새로 그려 메뉴부터 시작한다
-  return paused ? <PausePanel verbs={verbs} touch={touch} onResume={onResume} /> : null;
+  return paused ? (
+    <PausePanel verbs={verbs} touch={touch} onResume={onResume} onQuit={onQuit} />
+  ) : null;
 }
 
 function PausePanel({
   verbs,
   touch,
   onResume,
+  onQuit,
 }: {
   verbs: Readonly<Record<string, VerbEntry>>;
   touch: boolean;
   onResume: () => void;
+  onQuit: () => void;
 }) {
-  const [view, setView] = useState<'menu' | 'book'>('menu');
+  const [view, setView] = useState<'menu' | 'book' | 'quit'>('menu');
   const resumeRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     resumeRef.current?.focus();
@@ -72,7 +79,41 @@ function PausePanel({
           >
             동사 도감
           </button>
+          <button
+            type="button"
+            aria-pressed={view === 'quit'}
+            onClick={() => setView(view === 'quit' ? 'menu' : 'quit')}
+            className="min-h-11 rounded border border-muted px-4 aria-pressed:bg-white/15"
+          >
+            처음 화면으로
+          </button>
         </div>
+        {/* 진행이 사라지므로 한 번 더 묻는다 */}
+        {view === 'quit' && (
+          <div
+            className="mt-3 rounded border border-late/60 px-3 py-2"
+            role="group"
+            aria-label="그만두기 확인"
+          >
+            <p>이번 판을 그만둘까요? 모은 코인과 철자는 사라져요.</p>
+            <div className="mt-2 flex justify-center gap-2">
+              <button
+                type="button"
+                onClick={onQuit}
+                className="min-h-11 rounded bg-late px-4 font-bold text-bg"
+              >
+                그만두기
+              </button>
+              <button
+                type="button"
+                onClick={() => setView('menu')}
+                className="min-h-11 rounded border border-muted px-4"
+              >
+                아니요
+              </button>
+            </div>
+          </div>
+        )}
         {view === 'book' && (
           <div className="mt-3">
             <VerbBook verbs={verbs} />

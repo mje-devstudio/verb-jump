@@ -23,9 +23,12 @@ const selectResult = (s: GameSnapshot) => s.result;
 export function GameScreen({
   level,
   onFinish,
+  onQuit,
 }: {
   level: LevelDef;
   onFinish: (result: ResultData) => void;
+  /** 일시정지 메뉴에서 그만두기 → 처음 화면. */
+  onQuit: () => void;
 }) {
   const [store] = useState(createGameStore);
   const [touchInput] = useState(() => new TouchInput());
@@ -67,7 +70,13 @@ export function GameScreen({
           onVerbMet={metVerbs.add}
         />
         <WordCard store={store} />
-        <PauseMenu store={store} verbs={level.verbs} touch={touch} onResume={togglePause} />
+        <PauseMenu
+          store={store}
+          verbs={level.verbs}
+          touch={touch}
+          onResume={togglePause}
+          onQuit={onQuit}
+        />
         <ClearBanner store={store} />
         {touch && <TouchControls input={touchInput} store={store} />}
         {blocked && <RotateNotice />}

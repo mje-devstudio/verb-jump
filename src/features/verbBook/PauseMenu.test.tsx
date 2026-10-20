@@ -23,8 +23,9 @@ afterEach(() => {
 function setup() {
   const store = createGameStore();
   const onResume = vi.fn();
-  render(<PauseMenu store={store} verbs={verbs} onResume={onResume} />);
-  return { store, onResume };
+  const onQuit = vi.fn();
+  render(<PauseMenu store={store} verbs={verbs} onResume={onResume} onQuit={onQuit} />);
+  return { store, onResume, onQuit };
 }
 
 describe('F17 일시정지 메뉴와 동사 도감', () => {
@@ -68,6 +69,19 @@ describe('F17 일시정지 메뉴와 동사 도감', () => {
     fireEvent.click(screen.getByRole('button', { name: '동사 도감' }));
     fireEvent.click(screen.getByRole('button', { name: 'climb 발음 듣기' }));
     expect(speak).toHaveBeenCalledWith('climb');
+  });
+
+  it('처음 화면으로는 한 번 더 묻고, 그만두기를 눌러야 나간다', () => {
+    const { store, onQuit } = setup();
+    act(() => store.update({ paused: true }));
+    fireEvent.click(screen.getByRole('button', { name: '처음 화면으로' }));
+    const confirm = screen.getByRole('group', { name: '그만두기 확인' });
+    fireEvent.click(within(confirm).getByRole('button', { name: '아니요' }));
+    expect(onQuit).not.toHaveBeenCalled();
+    expect(screen.queryByRole('group', { name: '그만두기 확인' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: '처음 화면으로' }));
+    fireEvent.click(screen.getByRole('button', { name: '그만두기' }));
+    expect(onQuit).toHaveBeenCalledOnce();
   });
 
   it('다시 멈추면 도감이 닫힌 메뉴부터 보인다', () => {
