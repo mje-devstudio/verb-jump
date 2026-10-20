@@ -30,26 +30,26 @@ React 19 · TypeScript strict · PixiJS 8 · Vite · TanStack Query · Tailwind 
 
 PRD의 공고 요구사항 추적표다. P1(2차, 면접 전)로 표시한 것은 아직 만들지 않았다.
 
-| 구분      | 공고 항목                                     | 확인할 곳                                                                                                                                                                                                                                             |
-| --------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 필수      | React(Hooks, 컴포넌트 설계, 렌더링 최적화)    | HUD 동기화 [`useGameStore`](src/features/hud/useGameStore.ts)·[`hudSync`](src/game/hudSync.ts)(F09), 게임 루프와 React 분리 [`GameCanvas`](src/game/GameCanvas.tsx)(F04), 능력 모듈 [`abilities/`](src/game/abilities/)(F07), 성능 개선 기록(F19, P1) |
-| 필수      | HTML·CSS·JavaScript / TypeScript              | 전체 TypeScript strict(any·ts-ignore 없음), 규칙 계산 순수 함수 [`shared/rules`](src/shared/rules/)                                                                                                                                                   |
-| 필수      | REST API 연동(비동기 흐름, 에러 처리)         | 스테이지 로딩·자동 재시도·응답 검증 [`features/stage`](src/features/stage/)(F01), 지연·실패 재현 [`api/_lib/http.ts`](api/_lib/http.ts)(F02), 기록 등록(F18, P1)                                                                                      |
-| 필수      | 모던 CSS 반응형 레이아웃                      | Tailwind 메뉴·HUD·결과, 정수 배율 게임 화면 [`camera.ts`](src/game/render/camera.ts)(F03), 노치를 피한 모바일 조작 [`TouchControls`](src/features/controls/TouchControls.tsx)(F10)                                                                    |
-| 주요 업무 | 학습 서비스 웹 프론트엔드 설계·개발·운영      | [PRD 수정 기록](docs/prd-changes.md), 배포와 에러 바운더리 [`ErrorBoundary`](src/app/ErrorBoundary.tsx)(F13), [배포 기록](docs/deploy.md), 오류 모니터링(F22, P2)                                                                                     |
-| 주요 업무 | 렌더링 성능·번들 크기 측정·개선               | 32칸 묶음 타일 컬링 [`grayboxRenderer.ts`](src/game/render/grayboxRenderer.ts)(F03), [측정 기록](docs/measurements.md), 지연 로딩·개선 전후(F19, P1)                                                                                                  |
-| 주요 업무 | PC·모바일·다양한 브라우저 UI 품질             | 점프 손맛 [`player.ts`](src/game/physics/player.ts)(F05), 한 방향 발판(F25), 모바일 조작·판정 완화(F10), 아래 호환성 표                                                                                                                               |
-| 주요 업무 | 음성 인식·발음 평가 등 학습 인터랙션, 게임화  | 동사 얻기와 단어 카드·TTS(F06), 능력 모듈(F07), 코인과 철자 코인(F26·F27), 보스전 음성 인식(F15·F16, P1), 말하기 보너스(F28, P1)                                                                                                                      |
-| 우대      | 에듀테크 등 학습 서비스 도메인                | 동사를 몸으로 익히는 게임 자체, [학습 콘텐츠 검수](docs/content-review.md)                                                                                                                                                                            |
-| 우대      | 크로스 플랫폼(React Native, PWA, WebView)     | PWA(F21, P1), 카카오톡 인앱 브라우저 확인(호환성 표)                                                                                                                                                                                                  |
-| 우대      | 실시간 통신(WebSocket, SSE, WebRTC)           | 실시간 랭킹 SSE(F18, P1)                                                                                                                                                                                                                              |
-| 우대      | 애니메이션·인터랙션(Canvas/WebGL, Pixi.js 등) | PixiJS 횡스크롤(F03·F04), 능력별 동작(F07), Aseprite 스프라이트 로더 [`sprites.ts`](src/game/render/sprites.ts)(F12)                                                                                                                                  |
-| 인재상    | 개발부터 배포·운영까지 전 과정                | PRD부터 Vercel 배포(F13)·운영 장애 대응([이슈 005](docs/issues/005-api-esm-extension.md))까지 혼자 진행                                                                                                                                               |
-| 인재상    | 기획·디자인 요구사항을 웹으로 표현            | 게임 기획, 직접 그린 도트(F12, 진행 중), Tiled 맵 [`commute.tmj`](public/maps/commute.tmj)(F08)                                                                                                                                                       |
-| 인재상    | MVP 먼저, 원인 추적과 재발 방지               | 회색 상자 프로토타입부터 시작, 레벨 점검 [`levelCheck.ts`](src/game/level/levelCheck.ts)(F29 선행), 아래 이슈 기록                                                                                                                                    |
-| 인재상    | 소규모 팀에서 스스로 방향을 잡고 실행         | [진행표](docs/TASKS.md)·[작업 카드](docs/cards/)·[수용 기준 대조표](docs/acceptance.md)                                                                                                                                                               |
-| 업무 문화 | 데이터 기반 그로스 해킹                       | 학습 이벤트 기록(F20, P1)                                                                                                                                                                                                                             |
-| 업무 문화 | AI를 OS로 활용                                | 아래 "작업 범위와 AI 활용"                                                                                                                                                                                                                            |
+| 구분      | 공고 항목                                     | 확인할 곳                                                                                                                                                                                                                                         |
+| --------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 필수      | React(Hooks, 컴포넌트 설계, 렌더링 최적화)    | HUD 동기화 [`useGameStore`](src/features/hud/useGameStore.ts)·[`hudSync`](src/game/hudSync.ts)(F09), 게임 루프와 React 분리 [`GameCanvas`](src/game/GameCanvas.tsx)(F04), 능력 모듈 [`abilities/`](src/game/abilities/)(F07), 성능 개선 기록(F19) |
+| 필수      | HTML·CSS·JavaScript / TypeScript              | 전체 TypeScript strict(any·ts-ignore 없음), 규칙 계산 순수 함수 [`shared/rules`](src/shared/rules/)                                                                                                                                               |
+| 필수      | REST API 연동(비동기 흐름, 에러 처리)         | 스테이지 로딩·자동 재시도·응답 검증 [`features/stage`](src/features/stage/)(F01), 지연·실패 재현 [`api/_lib/http.ts`](api/_lib/http.ts)(F02), 기록 등록(F18, P1)                                                                                  |
+| 필수      | 모던 CSS 반응형 레이아웃                      | Tailwind 메뉴·HUD·결과, 정수 배율 게임 화면 [`camera.ts`](src/game/render/camera.ts)(F03), 노치를 피한 모바일 조작 [`TouchControls`](src/features/controls/TouchControls.tsx)(F10)                                                                |
+| 주요 업무 | 학습 서비스 웹 프론트엔드 설계·개발·운영      | [PRD 수정 기록](docs/prd-changes.md), 배포와 에러 바운더리 [`ErrorBoundary`](src/app/ErrorBoundary.tsx)(F13), [배포 기록](docs/deploy.md), 오류 모니터링(F22, P2)                                                                                 |
+| 주요 업무 | 렌더링 성능·번들 크기 측정·개선               | 32칸 묶음 타일 컬링 [`grayboxRenderer.ts`](src/game/render/grayboxRenderer.ts)(F03), [측정 기록](docs/measurements.md), 게임 화면 지연 로딩·폰트 부분 집합 [F19 카드](docs/cards/F19.md)                                                          |
+| 주요 업무 | PC·모바일·다양한 브라우저 UI 품질             | 점프 손맛 [`player.ts`](src/game/physics/player.ts)(F05), 한 방향 발판(F25), 모바일 조작·판정 완화(F10), 아래 호환성 표                                                                                                                           |
+| 주요 업무 | 음성 인식·발음 평가 등 학습 인터랙션, 게임화  | 동사 얻기와 단어 카드·TTS(F06), 능력 모듈(F07), 코인과 철자 코인(F26·F27), 보스전 음성 인식(F15·F16, P1), 말하기 보너스(F28, P1)                                                                                                                  |
+| 우대      | 에듀테크 등 학습 서비스 도메인                | 동사를 몸으로 익히는 게임 자체, [학습 콘텐츠 검수](docs/content-review.md)                                                                                                                                                                        |
+| 우대      | 크로스 플랫폼(React Native, PWA, WebView)     | PWA(F21, P1), 카카오톡 인앱 브라우저 확인(호환성 표)                                                                                                                                                                                              |
+| 우대      | 실시간 통신(WebSocket, SSE, WebRTC)           | 실시간 랭킹 SSE(F18, P1)                                                                                                                                                                                                                          |
+| 우대      | 애니메이션·인터랙션(Canvas/WebGL, Pixi.js 등) | PixiJS 횡스크롤(F03·F04), 능력별 동작(F07), Aseprite 스프라이트 로더 [`sprites.ts`](src/game/render/sprites.ts)(F12)                                                                                                                              |
+| 인재상    | 개발부터 배포·운영까지 전 과정                | PRD부터 Vercel 배포(F13)·운영 장애 대응([이슈 005](docs/issues/005-api-esm-extension.md))까지 혼자 진행                                                                                                                                           |
+| 인재상    | 기획·디자인 요구사항을 웹으로 표현            | 게임 기획, 직접 그린 도트(F12, 진행 중), Tiled 맵 [`commute.tmj`](public/maps/commute.tmj)(F08)                                                                                                                                                   |
+| 인재상    | MVP 먼저, 원인 추적과 재발 방지               | 회색 상자 프로토타입부터 시작, 레벨 점검 [`levelCheck.ts`](src/game/level/levelCheck.ts)(F29 선행), 아래 이슈 기록                                                                                                                                |
+| 인재상    | 소규모 팀에서 스스로 방향을 잡고 실행         | [진행표](docs/TASKS.md)·[작업 카드](docs/cards/)·[수용 기준 대조표](docs/acceptance.md)                                                                                                                                                           |
+| 업무 문화 | 데이터 기반 그로스 해킹                       | 학습 이벤트 기록(F20, P1)                                                                                                                                                                                                                         |
+| 업무 문화 | AI를 OS로 활용                                | 아래 "작업 범위와 AI 활용"                                                                                                                                                                                                                        |
 
 ## 아키텍처
 
@@ -80,20 +80,21 @@ PRD의 공고 요구사항 추적표다. P1(2차, 면접 전)로 표시한 것�
 
 ## 측정 결과
 
-자세한 조건과 원본 수치는 [측정 기록](docs/measurements.md). 아래는 F19(성능 개선) 전 기준값이다.
+자세한 조건과 원본 수치는 [측정 기록](docs/measurements.md). 번들 크기는 F19(성능 개선) 1차 전후, 나머지는 F19 전 운영 측정값이다.
 
-| 항목                           | PRD 기준     | 결과                                                     |
-| ------------------------------ | ------------ | -------------------------------------------------------- |
-| 게임 화면 FPS, CPU 4배 감속    | 평균 55 이상 | **60fps**, 20ms 넘는 프레임 0개 (M1 Pro headless Chrome) |
-| 모바일 Lighthouse 성능(타이틀) | 90 이상      | **97** (중간값)                                          |
-| LCP · CLS                      | 2.5초 · 0.1  | **2.12초 · 0.003**                                       |
-| 접근성 · 모범 사례 · SEO       | —            | 100 · 100 · 100                                          |
-| 첫 화면 JS                     | —            | 591.39kB (gzip 179.66kB) — PixiJS 포함, F19에서 분리     |
-| `shared/rules` 테스트 커버리지 | CI 90% 기준  | 100%                                                     |
+| 항목                           | PRD 기준     | 결과                                                                          |
+| ------------------------------ | ------------ | ----------------------------------------------------------------------------- |
+| 게임 화면 FPS, CPU 4배 감속    | 평균 55 이상 | **60fps**, 20ms 넘는 프레임 0개 (M1 Pro headless Chrome)                      |
+| 모바일 Lighthouse 성능(타이틀) | 90 이상      | **97** (중간값)                                                               |
+| LCP · CLS                      | 2.5초 · 0.1  | **2.12초 · 0.003**                                                            |
+| 접근성 · 모범 사례 · SEO       | —            | 100 · 100 · 100                                                               |
+| 첫 화면 JS                     | —            | 591.39kB → **278.61kB** (gzip 179.66 → 87.88kB) — 게임 화면(PixiJS) 지연 로딩 |
+| 게임 폰트(갈무리11)            | —            | 504.73kB → **48.62kB** — 쓰는 글자만 남긴 부분 집합                           |
+| `shared/rules` 테스트 커버리지 | CI 90% 기준  | 100%                                                                          |
 
 - **실제 휴대폰 FPS는 아직 재지 않았다.** 위 FPS는 빠른 Mac에서 잰 값이라 여유가 크다.
 - INP는 실사용 입력이 있어야 나오는 지표라 아직 없다.
-- 개선 전후 비교(게임 화면 지연 로딩, 폰트 서브셋, 오브젝트 풀)는 F19에서 채운다.
+- F19 1차 내용과 발견한 버그는 [F19 카드](docs/cards/F19.md). 운영 Lighthouse 전후 비교는 배포 뒤 채운다.
 
 ## 호환성과 검수 결과
 

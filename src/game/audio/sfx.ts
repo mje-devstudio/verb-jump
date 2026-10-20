@@ -1,4 +1,3 @@
-import { sfxr } from 'jsfxr';
 import { SFX_DEFS, type SfxName } from './sfxDefs';
 
 /**
@@ -8,6 +7,8 @@ import { SFX_DEFS, type SfxName } from './sfxDefs';
 export class Sfx {
   private ctx: AudioContext | null = null;
   private readonly buffers = new Map<SfxName, AudioBuffer>();
+  // F19: 효과음 생성기(jsfxr)는 첫 화면 번들에서 떼고 시작 버튼을 누를 때 받는다
+  private synth: typeof import('jsfxr').sfxr | null = null;
   enabled = true;
 
   /** 시작 버튼(첫 사용자 동작)에서 부른다. */
@@ -15,13 +16,22 @@ export class Sfx {
     if (typeof window === 'undefined' || !('AudioContext' in window)) return;
     this.ctx ??= new AudioContext();
     void this.ctx.resume();
+    if (!this.synth) {
+      import('jsfxr').then(
+        (m) => {
+          this.synth = m.sfxr;
+        },
+        () => {}, // 못 받으면 효과음 없이 계속한다
+      );
+    }
   }
 
   play(name: SfxName): void {
     if (!this.enabled || !this.ctx || this.ctx.state !== 'running') return;
     let buf = this.buffers.get(name);
     if (!buf) {
-      const src = sfxr.toWebAudio(SFX_DEFS[name], this.ctx);
+      if (!this.synth) return; // 아직 받는 중
+      const src = this.synth.toWebAudio(SFX_DEFS[name], this.ctx);
       if (!src?.buffer) return;
       buf = src.buffer;
       this.buffers.set(name, buf);

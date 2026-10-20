@@ -54,6 +54,17 @@ Lighthouse 13.5.0, 모바일 기본 설정(느린 4G·CPU 감속 흉내), 로컬
 
 첫 화면 JS에 PixiJS가 함께 들어 있다. F19에서 게임 화면을 지연 로딩해 전후를 비교한다.
 
+### F19 1차 뒤 (`F19-perf`, 2026-10-20)
+
+| 파일                                 | 전                         | 후                            |
+| ------------------------------------ | -------------------------- | ----------------------------- |
+| 첫 화면 JS `index-*.js`              | 591.39 kB (gzip 179.66 kB) | **278.61 kB (gzip 87.88 kB)** |
+| 게임 화면 JS `GameScreen-*.js`(지연) | —                          | 291.81 kB (gzip 87.74 kB)     |
+| jsfxr `sfxr-*.js`(지연)              | 첫 화면에 포함             | 22.30 kB (gzip 6.21 kB)       |
+| 갈무리11 폰트                        | 504.73 kB                  | **48.62 kB**                  |
+
+구성 확인은 `ANALYZE=1 npm run build`(`dist/stats.html`). 전: 첫 화면 청크에 react-dom·pixi.js·TanStack Query·jsfxr. 후: 첫 화면 청크에 pixi.js·jsfxr 없음. 운영 Lighthouse 재측정은 배포 뒤.
+
 ## 테스트 커버리지
 
 `npm run test:coverage` — `src/shared/rules` 문장·분기·함수·줄 모두 **100%**(85 · 31 · 20 · 79). 처음 측정은 96.47 · 93.54 · 90 · 96.2%였고, 빠진 `scaleTuning`·`mobileTuning`·철자 범위 밖 분기 테스트를 더했다. CI는 90% 미만이면 실패한다.

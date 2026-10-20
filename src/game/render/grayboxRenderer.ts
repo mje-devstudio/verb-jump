@@ -2,9 +2,8 @@ import { Application, Container, Graphics, Sprite, Text, type Texture } from 'pi
 import { mapWidthPx, Tile, type TileMap } from '../level/tilemap';
 import { TILE, VIEW_H, VIEW_W } from '../../shared/rules/tuning';
 import type { AbilityPose } from '../abilities/types';
-import { coinBox, type World } from '../world';
+import { coinBox, SPILLED_LIVE_MAX, type World } from '../world';
 import { cameraX, CHUNK_COLS, visibleChunks } from './camera';
-import { SPILL_MAX } from '../../shared/rules/game';
 import { frameIndex, heroAnimation, loadSprites, type SpriteSet } from './sprites';
 
 const COLORS = {
@@ -37,7 +36,7 @@ export class GrayboxRenderer {
   /** 맵 코인·철자 코인. 주우면 숨긴다. */
   private coinSprites: Container[] = [];
   private letterSprites: Container[] = [];
-  /** 흘린 코인은 동시에 최대 SPILL_MAX개라 미리 만들어 재사용한다(매 피격마다 생성하지 않음). */
+  /** 흘린 코인은 동시에 최대 SPILLED_LIVE_MAX개라 미리 만들어 재사용한다(매 피격마다 생성하지 않음). */
   private readonly spillPool: Container[] = [];
   /** 도트 리소스가 있을 때만 쓰는 스프라이트. */
   private readonly heroSprite: Sprite | null;
@@ -226,7 +225,7 @@ export class GrayboxRenderer {
       this.level.addChildAt(box, 2);
       return box;
     });
-    for (let i = 0; i < SPILL_MAX; i++) {
+    for (let i = 0; i < SPILLED_LIVE_MAX; i++) {
       const s = this.coinView();
       s.visible = false;
       this.level.addChild(s);

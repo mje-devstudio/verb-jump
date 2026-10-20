@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { SLEEP_CLOCK_PENALTY_MS } from '../shared/rules/abilities';
+import { HURT_INVINCIBLE_MS, SLEEP_CLOCK_PENALTY_MS } from '../shared/rules/abilities';
 import { formatClock } from '../shared/rules/clock';
-import { LIVES_MAX, SPILL_PICKUP_WINDOW_MS } from '../shared/rules/game';
+import { LIVES_MAX, SPILL_MAX, SPILL_PICKUP_WINDOW_MS } from '../shared/rules/game';
 import { DEFAULT_TUNING as T, STEP_S, TILE } from '../shared/rules/tuning';
 import { COMMUTE_VERBS } from './data/verbs';
 import { NO_CONTROLS, type ControlSnapshot } from './input';
@@ -9,6 +9,7 @@ import { parseAsciiMap } from './level/tilemap';
 import {
   createWorld,
   drainEvents,
+  SPILLED_LIVE_MAX,
   stepWorld,
   worldClock,
   type LevelDef,
@@ -67,6 +68,23 @@ describe('F26 코인과 피격 (게임 세계)', () => {
     expect(w.spilled).toHaveLength(3);
     run(w, Math.ceil(SPILL_PICKUP_WINDOW_MS / 1000 / STEP_S) + 2);
     expect(w.spilled).toHaveLength(0);
+  });
+
+  it('무적이 끝나자마자 또 맞아도 흘린 코인은 화면에 그릴 수 있는 수를 넘지 않는다', () => {
+    const w = createWorld(lvl({ enemies: [{ verb: 'sleep', col: 30, row: 5 }] }));
+    run(w, 10);
+    w.coins = 30;
+    hitOnce(w);
+    // 흘린 코인을 줍지 않도록 멀리 옮겨 두고 무적이 끝날 때까지 기다린다
+    w.player.x += 15 * TILE;
+    w.prev.x = w.player.x;
+    run(w, Math.ceil(HURT_INVINCIBLE_MS / 1000 / STEP_S) + 1);
+    const first = w.spilled.length;
+    hitOnce(w);
+    expect(first).toBeGreaterThan(0);
+    // 앞서 흘린 코인이 남아 있어 한 번에 흘리는 최대치(10)를 넘는다 → 렌더러 풀은 SPILLED_LIVE_MAX로 만든다
+    expect(w.spilled.length).toBeGreaterThan(SPILL_MAX);
+    expect(w.spilled.length).toBeLessThanOrEqual(SPILLED_LIVE_MAX);
   });
 
   it('흘린 코인 위를 지나가면 다시 줍는다', () => {

@@ -1,4 +1,4 @@
-import { useCallback, useReducer } from 'react';
+import { Suspense, useCallback, useReducer } from 'react';
 import type { ResultData } from '../game/result';
 import type { LevelDef } from '../game/world';
 import type { StageData } from '../shared/stages/types';
@@ -6,7 +6,7 @@ import { unlockSpeech } from '../shared/lib/tts';
 import { sfx } from '../game/audio/sfx';
 import { DevPanel } from '../features/devtools/DevPanel';
 import { devToolsEnabled } from '../features/devtools/devSettings';
-import { GameScreen } from '../features/game/GameScreen';
+import { LazyGameScreen } from '../features/game/lazyGameScreen';
 import { saveIfBest } from '../features/result/bestRecord';
 import { ResultScreen } from '../features/result/ResultScreen';
 import { TitleScreen } from '../features/title/TitleScreen';
@@ -75,7 +75,15 @@ export function App() {
     <main className="h-full">
       {screen.name === 'title' && <TitleScreen stageId={STAGE_ID} onStart={start} />}
       {screen.name === 'game' && (
-        <GameScreen key={screen.run} level={screen.level} onFinish={finish} />
+        <Suspense
+          fallback={
+            <p className="flex h-full items-center justify-center" role="status">
+              게임 화면을 불러오는 중…
+            </p>
+          }
+        >
+          <LazyGameScreen key={screen.run} level={screen.level} onFinish={finish} />
+        </Suspense>
       )}
       {screen.name === 'result' && (
         <ResultScreen

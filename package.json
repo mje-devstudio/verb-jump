@@ -17,7 +17,8 @@
     "sprites:placeholder": "node scripts/gen-placeholder-sprites.mjs",
     "check:api": "node scripts/check-api-esm.mjs",
     "test:coverage": "vitest run --coverage",
-    "measure:fps": "node scripts/measure-fps.mjs"
+    "measure:fps": "node scripts/measure-fps.mjs",
+    "font:subset": "node scripts/subset-font.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.104.4",
@@ -43,6 +44,8 @@
     "msw": "^3.0.3",
     "playwright-core": "^1.64.1",
     "prettier": "^3.9.10",
+    "rollup-plugin-visualizer": "^5.14.0",
+    "subset-font": "^2.9.0",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.71.2",

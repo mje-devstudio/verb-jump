@@ -1,9 +1,9 @@
 # NOTICE — 함께 쓰는 리소스와 라이선스
 
-| 리소스                          | 어디에                              | 라이선스                     | 파일                                                         |
-| ------------------------------- | ----------------------------------- | ---------------------------- | ------------------------------------------------------------ |
-| 갈무리(Galmuri11) 폰트 — quiple | 게임 HUD·단어 카드의 한글 픽셀 글꼴 | SIL Open Font License 1.1    | [licenses/galmuri-OFL.md](licenses/galmuri-OFL.md)           |
-| jsfxr — chr15m                  | 8비트 효과음 생성                   | The Unlicense(퍼블릭 도메인) | [licenses/jsfxr-UNLICENSE.txt](licenses/jsfxr-UNLICENSE.txt) |
+| 리소스                          | 어디에                                                                                                                                                     | 라이선스                     | 파일                                                         |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------ |
+| 갈무리(Galmuri11) 폰트 — quiple | 게임 HUD·단어 카드의 한글 픽셀 글꼴. 쓰는 글자만 남긴 부분 집합(`npm run font:subset`)으로 배포 — 원본 라이선스에 예약 글꼴 이름이 없어 이름을 그대로 둔다 | SIL Open Font License 1.1    | [licenses/galmuri-OFL.md](licenses/galmuri-OFL.md)           |
+| jsfxr — chr15m                  | 8비트 효과음 생성                                                                                                                                          | The Unlicense(퍼블릭 도메인) | [licenses/jsfxr-UNLICENSE.txt](licenses/jsfxr-UNLICENSE.txt) |
 
 라이브러리(React, PixiJS, TanStack Query 등)의 라이선스는 `node_modules` 각 패키지에 들어 있다. P2 "라이선스" 리뷰에서 배포 번들 기준 목록을 다시 만든다.
 

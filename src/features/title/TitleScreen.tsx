@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { LevelDef } from '../../game/world';
 import { loadGameFont } from '../../shared/lib/fonts';
+import { preloadGameScreen } from '../game/lazyGameScreen';
 import type { StageData } from '../../shared/stages/types';
 import { loadBest } from '../result/bestRecord';
 import { DotLoadingBar } from '../stage/DotLoadingBar';
@@ -40,9 +41,10 @@ export function TitleScreen({
   const { stage, level, status, error, retry } = useStage(stageId);
   const best = loadBest(stageId);
   const prefs = useSettings();
-  // 게임 HUD 글꼴을 미리 받아 둔다(타이틀 자체는 쓰지 않아 첫 화면 속도에 영향이 적다)
+  // 게임 HUD 글꼴과 게임 화면 코드(PixiJS)를 미리 받아 둔다. 타이틀 자체는 쓰지 않아 첫 화면 속도에 영향이 적다
   useEffect(() => {
     void loadGameFont();
+    preloadGameScreen().catch(() => {}); // 실패하면 시작할 때 다시 받는다
   }, []);
   return (
     <section className="mx-auto flex h-full max-w-md flex-col items-center justify-center gap-6 px-4 text-center">

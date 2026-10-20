@@ -22,7 +22,7 @@ import {
   STOMP_BOUNCE,
 } from '../shared/rules/abilities';
 import { judgeContact, overlaps, type Box } from '../shared/rules/stomp';
-import { LIVES_START } from '../shared/rules/game';
+import { LIVES_START, SPILL_MAX, SPILL_PICKUP_WINDOW_MS } from '../shared/rules/game';
 import { applyFall, applyHit, gainLife, type HitResult } from '../shared/rules/life';
 import { collectLetter, isWordComplete } from '../shared/rules/letters';
 import { clockMs } from '../shared/rules/clock';
@@ -193,6 +193,12 @@ function slotLetters(word: string, letters: readonly LetterSpawn[]): number[] {
     return -1;
   });
 }
+
+/**
+ * 동시에 남아 있을 수 있는 흘린 코인 수. 무적(1초)이 끝나자마자 또 맞으면 앞서 흘린 코인(2초)이
+ * 남아 있어 SPILL_MAX를 넘는다. 렌더러는 이만큼 미리 만들어 재사용한다(F19 오브젝트 풀).
+ */
+export const SPILLED_LIVE_MAX = SPILL_MAX * Math.ceil(SPILL_PICKUP_WINDOW_MS / HURT_INVINCIBLE_MS);
 
 export const coinBox = (p: Point): Box => ({
   x: p.x + (TILE - COIN_SIZE) / 2,
