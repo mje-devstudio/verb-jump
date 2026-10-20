@@ -96,26 +96,6 @@ export function PauseButton({ store, onToggle }: { store: GameStore; onToggle: (
   );
 }
 
-export function PausedOverlay({ store, touch = false }: { store: GameStore; touch?: boolean }) {
-  const paused = useGameStore(store, sel.paused);
-  if (!paused) return null;
-  return (
-    <div
-      role="status"
-      className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-md bg-panel/90 px-6 py-3 text-lg"
-    >
-      {/* 터치 기기에는 Esc가 없다(리뷰 13) */}
-      {touch ? (
-        <>일시정지 · 위의 계속 버튼을 누르세요</>
-      ) : (
-        <>
-          일시정지 · <kbd className="text-sm">Esc</kbd>로 계속
-        </>
-      )}
-    </div>
-  );
-}
-
 export function Hud({ store, onTogglePause }: { store: GameStore; onTogglePause: () => void }) {
   return (
     <div className="flex flex-wrap items-center gap-x-5 gap-y-1 font-pixel pt-[max(8px,env(safe-area-inset-top))] pr-[max(16px,env(safe-area-inset-right))] pl-[max(16px,env(safe-area-inset-left))] text-[15px]">

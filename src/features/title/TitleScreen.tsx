@@ -9,6 +9,7 @@ import { loadBest } from '../result/bestRecord';
 import { DotLoadingBar } from '../stage/DotLoadingBar';
 import { useStage } from '../stage/useStage';
 import { settings, useSettings } from '../settings/settings';
+import { VolumeControls } from '../settings/VolumeControls';
 
 function Toggle({
   label,
@@ -72,6 +73,10 @@ export function TitleScreen({
         <Toggle label="효과음" on={prefs.sfx} onChange={(sfxOn) => settings.set({ sfx: sfxOn })} />
         <Toggle label="발음" on={prefs.speech} onChange={(speech) => settings.set({ speech })} />
       </div>
+      <details className="w-full max-w-sm text-sm">
+        <summary className="min-h-11 cursor-pointer py-2 text-muted">볼륨 조절</summary>
+        <VolumeControls />
+      </details>
       {status === 'loading' && <DotLoadingBar />}
       {status === 'error' && (
         <div role="alert" className="flex flex-col items-center gap-2">

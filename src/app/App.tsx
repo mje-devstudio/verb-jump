@@ -1,9 +1,10 @@
-import { Suspense, useCallback, useReducer } from 'react';
+import { Suspense, useCallback, useEffect, useReducer } from 'react';
 import type { ResultData } from '../game/result';
 import type { LevelDef } from '../game/world';
 import type { StageData } from '../shared/stages/types';
 import { unlockSpeech } from '../shared/lib/tts';
 import { sfx } from '../game/audio/sfx';
+import { settings } from '../features/settings/settings';
 import { DevPanel } from '../features/devtools/DevPanel';
 import { devToolsEnabled } from '../features/devtools/devSettings';
 import { LazyGameScreen } from '../features/game/lazyGameScreen';
@@ -51,6 +52,16 @@ function reducer(s: Screen, a: Action): Screen {
 export function App() {
   const [screen, dispatch] = useReducer(reducer, { name: 'title' });
 
+  // 효과음 볼륨 설정을 효과음 재생기에 반영한다(처음 한 번 + 바뀔 때마다)
+  useEffect(() => {
+    const apply = () => sfx.setVolume(settings.get().sfxVolume);
+    apply();
+    const unsubscribe = settings.subscribe(apply);
+    return () => {
+      unsubscribe();
+    };
+  }, []);
+
   const start = useCallback((stage: StageData, level: LevelDef) => {
     // 시작 버튼이 오디오를 허용하는 첫 사용자 동작
     unlockSpeech();
@@ -82,7 +93,12 @@ export function App() {
             </p>
           }
         >
-          <LazyGameScreen key={screen.run} level={screen.level} onFinish={finish} />
+          <LazyGameScreen
+            key={screen.run}
+            level={screen.level}
+            onFinish={finish}
+            onQuit={() => dispatch({ type: 'title' })}
+          />
         </Suspense>
       )}
       {screen.name === 'result' && (

@@ -351,7 +351,12 @@ export function stepWorld(
     if (contact === 'stomp') {
       e.alive = false;
       e.respawnInMs = ENEMY_RESPAWN_MS;
-      w.player.vy = -tuning.jumpVel * STOMP_BOUNCE;
+      // 통통 연속 밟기: 밟는 순간 점프 키를 누르고 있으면(또는 막 눌렀으면) 점프만큼 높이 튀어 다음 적까지 닿는다.
+      // 그대로 누르고 있는 길이로 높이를 조절한다(rising). 키를 안 누르면 낮게 튄다.
+      const boosted = input.jumpHeld || w.player.bufferMs > 0;
+      w.player.vy = -tuning.jumpVel * (boosted ? 1 : STOMP_BOUNCE);
+      w.player.rising = boosted;
+      w.player.bufferMs = 0;
       w.player.onGround = false;
       stomped = true;
       gainVerb(w, e.verb, ctx);
